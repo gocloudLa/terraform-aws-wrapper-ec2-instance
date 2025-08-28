@@ -91,26 +91,6 @@ module "wrapper_ec2_instance" {
         Application = "web-server"
       }
     }
-    
-    "session-manager-instance" = {
-      instance_type = "t3.micro"
-      subnet_id     = data.aws_subnets.private.ids[0]
-      
-      create_iam_instance_profile = true
-      iam_role_policies = {
-        SSMCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
-      }
-      
-      tags = {
-        Environment = "development"
-        Purpose     = "session-manager"
-      }
-    }
-  }
-
-  ec2_instance_defaults = {
-    instance_type = "t3.micro"
-    monitoring    = true
   }
 }
 ```
@@ -121,61 +101,82 @@ module "wrapper_ec2_instance" {
 |-----------|------|-------------|-----------|-----------|------------------|
 | `ami` | string | ID de la AMI a utilizar | Básico | No | `ami-0abcdef1234567890` |
 | `ami_ssm_parameter` | string | Parámetro SSM para obtener AMI | Básico | No | `/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64` |
-| `instance_type` | string | Tipo de instancia EC2 | Básico | No | `t3.micro`, `t3.small`, `m5.large` |
-| `availability_zone` | string | Zona de disponibilidad | Red | No | `us-east-1a` |
-| `subnet_id` | string | ID de la subnet donde crear la instancia | Red | No | `subnet-12345678` |
 | `associate_public_ip_address` | bool | Asignar IP pública automáticamente | Red | No | `true/false` |
+| `availability_zone` | string | Zona de disponibilidad | Red | No | `us-east-1a` |
+| `capacity_reservation_specification` | object | Especificación de reserva de capacidad | Avanzado | No | Ver ejemplo |
+| `cpu_credits` | string | Modo de créditos CPU para instancias T | Performance | No | `standard`, `unlimited` |
+| `cpu_options` | object | Opciones de CPU | Performance | No | `{core_count = 2, threads_per_core = 1}` |
+| `create` | bool | Crear la instancia | Control | No | `true/false` |
 | `create_eip` | bool | Crear Elastic IP | Red | No | `true/false` |
+| `create_iam_instance_profile` | bool | Crear IAM Instance Profile | IAM | No | `true/false` |
+| `create_security_group` | bool | Crear Security Group | Seguridad | No | `true/false` |
+| `create_spot_instance` | bool | Crear instancia Spot | Spot | No | `true/false` |
+| `disable_api_stop` | bool | Deshabilitar parada por API | Protección | No | `true/false` |
+| `disable_api_termination` | bool | Deshabilitar terminación por API | Protección | No | `true/false` |
+| `ebs_optimized` | bool | Habilitar optimización EBS | Almacenamiento | No | `true/false` |
+| `ebs_volumes` | map(object) | Volúmenes EBS adicionales | Almacenamiento | No | Ver ejemplo |
 | `eip_domain` | string | Dominio del Elastic IP | Red | No | `vpc` |
 | `eip_tags` | map(string) | Tags para el Elastic IP | Red | No | `{Name = "my-eip"}` |
-| `create_security_group` | bool | Crear Security Group | Seguridad | No | `true/false` |
-| `security_group_name` | string | Nombre del Security Group | Seguridad | No | `my-sg` |
-| `security_group_description` | string | Descripción del Security Group | Seguridad | No | `Security group for web server` |
-| `security_group_ingress_rules` | map(object) | Reglas de ingreso del Security Group | Seguridad | No | Ver ejemplo |
-| `security_group_egress_rules` | map(object) | Reglas de egreso del Security Group | Seguridad | No | Ver ejemplo |
-| `vpc_security_group_ids` | list(string) | IDs de Security Groups existentes | Seguridad | No | `["sg-12345678"]` |
-| `create_iam_instance_profile` | bool | Crear IAM Instance Profile | IAM | No | `true/false` |
-| `iam_role_name` | string | Nombre del rol IAM | IAM | No | `my-ec2-role` |
-| `iam_role_description` | string | Descripción del rol IAM | IAM | No | `IAM role for EC2 instance` |
-| `iam_role_policies` | map(string) | Políticas IAM a adjuntar | IAM | No | `{S3Access = "arn:aws:iam::aws:policy/AmazonS3FullAccess"}` |
+| `enable_primary_ipv6` | bool | Habilitar IPv6 primaria | Red | No | `true/false` |
+| `enable_volume_tags` | bool | Habilitar tags en volúmenes | Almacenamiento | No | `true/false` |
+| `enclave_options_enabled` | bool | Habilitar AWS Nitro Enclaves | Performance | No | `true/false` |
+| `ephemeral_block_device` | list(object) | Dispositivos de bloque efímeros | Almacenamiento | No | Ver ejemplo |
+| `get_password_data` | bool | Obtener datos de contraseña (Windows) | Configuración | No | `true/false` |
+| `hibernation` | bool | Habilitar hibernación | Performance | No | `true/false` |
+| `host_id` | string | ID del host dedicado | Avanzado | No | `h-0123456789abcdef0` |
+| `host_resource_group_arn` | string | ARN del grupo de recursos del host | Avanzado | No | `arn:aws:resource-groups:...` |
 | `iam_instance_profile` | string | Instance Profile existente | IAM | No | `my-instance-profile` |
+| `iam_role_description` | string | Descripción del rol IAM | IAM | No | `IAM role for EC2 instance` |
+| `iam_role_name` | string | Nombre del rol IAM | IAM | No | `my-ec2-role` |
+| `iam_role_path` | string | Ruta del rol IAM | IAM | No | `/ec2/` |
+| `iam_role_permissions_boundary` | string | ARN del boundary de permisos | IAM | No | `arn:aws:iam::123456789012:policy/...` |
+| `iam_role_policies` | map(string) | Políticas IAM a adjuntar | IAM | No | `{S3Access = "arn:aws:iam::aws:policy/AmazonS3FullAccess"}` |
+| `iam_role_tags` | map(string) | Tags para el rol IAM | IAM | No | `{Purpose = "ec2-access"}` |
+| `iam_role_use_name_prefix` | bool | Usar prefijo en nombre del rol | IAM | No | `true/false` |
+| `ignore_ami_changes` | bool | Ignorar cambios en AMI | Configuración | No | `true/false` |
+| `instance_initiated_shutdown_behavior` | string | Comportamiento al apagar | Protección | No | `stop`, `terminate` |
+| `instance_market_options` | object | Opciones de mercado de instancia | Spot | No | Ver ejemplo |
+| `instance_tags` | map(string) | Tags específicos de instancia | Metadatos | No | `{Name = "web-server"}` |
+| `instance_type` | string | Tipo de instancia EC2 | Básico | No | `t3.micro`, `t3.small`, `m5.large` |
+| `ipv6_address_count` | number | Número de direcciones IPv6 | Red | No | `1` |
+| `ipv6_addresses` | list(string) | Direcciones IPv6 específicas | Red | No | `["2001:db8::1"]` |
 | `key_name` | string | Nombre del Key Pair | Acceso | No | `my-keypair` |
+| `launch_template` | object | Plantilla de lanzamiento | Avanzado | No | Ver ejemplo |
+| `maintenance_options` | object | Opciones de mantenimiento | Avanzado | No | `{auto_recovery = "default"}` |
+| `metadata_options` | object | Opciones de metadatos de instancia | Seguridad | No | Ver ejemplo |
+| `monitoring` | bool | Habilitar monitoreo detallado | Monitoreo | No | `true/false` |
+| `name` | string | Nombre de la instancia | Básico | No | `web-server-01` |
+| `network_interface` | list(object) | Interfaces de red | Red | No | Ver ejemplo |
+| `private_dns_name_options` | object | Opciones de DNS privado | Red | No | Ver ejemplo |
+| `private_ip` | string | IP privada específica | Red | No | `10.0.1.100` |
+| `putin_khuylo` | bool | Parámetro interno del módulo | Interno | No | `true` |
+| `region` | string | Región AWS | Básico | No | `us-east-1` |
+| `root_block_device` | object | Configuración del volumen raíz | Almacenamiento | No | Ver ejemplo |
+| `secondary_private_ips` | list(string) | IPs privadas secundarias | Red | No | `["10.0.1.101", "10.0.1.102"]` |
+| `security_group_description` | string | Descripción del Security Group | Seguridad | No | `Security group for web server` |
+| `security_group_egress_rules` | map(object) | Reglas de egreso del Security Group | Seguridad | No | Ver ejemplo |
+| `security_group_ingress_rules` | map(object) | Reglas de ingreso del Security Group | Seguridad | No | Ver ejemplo |
+| `security_group_name` | string | Nombre del Security Group | Seguridad | No | `my-sg` |
+| `security_group_tags` | map(string) | Tags para el Security Group | Seguridad | No | `{Purpose = "web-access"}` |
+| `security_group_use_name_prefix` | bool | Usar prefijo en nombre del SG | Seguridad | No | `true/false` |
+| `security_group_vpc_id` | string | ID de la VPC para el Security Group | Seguridad | No | `vpc-12345678` |
+| `source_dest_check` | bool | Verificación origen/destino | Red | No | `true/false` |
+| `spot_instance_interruption_behavior` | string | Comportamiento al interrumpir Spot | Spot | No | `hibernate`, `stop`, `terminate` |
+| `spot_launch_group` | string | Grupo de lanzamiento Spot | Spot | No | `my-spot-group` |
+| `spot_price` | string | Precio máximo para instancia Spot | Spot | No | `0.05` |
+| `spot_type` | string | Tipo de solicitud Spot | Spot | No | `one-time`, `persistent` |
+| `spot_valid_from` | string | Fecha de inicio válida para Spot | Spot | No | `2023-01-01T00:00:00Z` |
+| `spot_valid_until` | string | Fecha de fin válida para Spot | Spot | No | `2023-12-31T23:59:59Z` |
+| `spot_wait_for_fulfillment` | bool | Esperar cumplimiento de Spot | Spot | No | `true/false` |
+| `subnet_id` | string | ID de la subnet donde crear la instancia | Red | No | `subnet-12345678` |
+| `tags` | map(string) | Tags para la instancia | Metadatos | No | `{Environment = "prod"}` |
+| `tenancy` | string | Tenencia de la instancia | Avanzado | No | `default`, `dedicated`, `host` |
+| `timeouts` | object | Timeouts para operaciones | Configuración | No | `{create = "10m", update = "10m", delete = "20m"}` |
 | `user_data` | string | Script de inicialización | Configuración | No | `#!/bin/bash\necho "Hello World"` |
 | `user_data_base64` | string | Script de inicialización en base64 | Configuración | No | `IyEvYmluL2Jhc2g=` |
 | `user_data_replace_on_change` | bool | Reemplazar instancia al cambiar user_data | Configuración | No | `true/false` |
-| `root_block_device` | object | Configuración del volumen raíz | Almacenamiento | No | Ver ejemplo |
-| `ebs_volumes` | map(object) | Volúmenes EBS adicionales | Almacenamiento | No | Ver ejemplo |
-| `ebs_optimized` | bool | Habilitar optimización EBS | Almacenamiento | No | `true/false` |
-| `enable_volume_tags` | bool | Habilitar tags en volúmenes | Almacenamiento | No | `true/false` |
-| `monitoring` | bool | Habilitar monitoreo detallado | Monitoreo | No | `true/false` |
-| `create_spot_instance` | bool | Crear instancia Spot | Spot | No | `true/false` |
-| `spot_price` | string | Precio máximo para instancia Spot | Spot | No | `0.05` |
-| `spot_type` | string | Tipo de solicitud Spot | Spot | No | `one-time`, `persistent` |
-| `spot_wait_for_fulfillment` | bool | Esperar cumplimiento de Spot | Spot | No | `true/false` |
-| `cpu_credits` | string | Modo de créditos CPU para instancias T | Performance | No | `standard`, `unlimited` |
-| `cpu_options` | object | Opciones de CPU | Performance | No | `{core_count = 2, threads_per_core = 1}` |
-| `hibernation` | bool | Habilitar hibernación | Performance | No | `true/false` |
-| `enclave_options_enabled` | bool | Habilitar AWS Nitro Enclaves | Performance | No | `true/false` |
-| `disable_api_termination` | bool | Deshabilitar terminación por API | Protección | No | `true/false` |
-| `disable_api_stop` | bool | Deshabilitar parada por API | Protección | No | `true/false` |
-| `instance_initiated_shutdown_behavior` | string | Comportamiento al apagar | Protección | No | `stop`, `terminate` |
-| `metadata_options` | object | Opciones de metadatos de instancia | Seguridad | No | Ver ejemplo |
-| `private_ip` | string | IP privada específica | Red | No | `10.0.1.100` |
-| `secondary_private_ips` | list(string) | IPs privadas secundarias | Red | No | `["10.0.1.101", "10.0.1.102"]` |
-| `source_dest_check` | bool | Verificación origen/destino | Red | No | `true/false` |
-| `tenancy` | string | Tenencia de la instancia | Avanzado | No | `default`, `dedicated`, `host` |
-| `host_id` | string | ID del host dedicado | Avanzado | No | `h-0123456789abcdef0` |
-| `capacity_reservation_specification` | object | Especificación de reserva de capacidad | Avanzado | No | Ver ejemplo |
-| `launch_template` | object | Plantilla de lanzamiento | Avanzado | No | Ver ejemplo |
-| `network_interface` | list(object) | Interfaces de red | Red | No | Ver ejemplo |
-| `maintenance_options` | object | Opciones de mantenimiento | Avanzado | No | `{auto_recovery = "default"}` |
-| `private_dns_name_options` | object | Opciones de DNS privado | Red | No | Ver ejemplo |
-| `timeouts` | object | Timeouts para operaciones | Configuración | No | `{create = "10m", update = "10m", delete = "20m"}` |
-| `tags` | map(string) | Tags para la instancia | Metadatos | No | `{Environment = "prod"}` |
-| `instance_tags` | map(string) | Tags específicos de instancia | Metadatos | No | `{Name = "web-server"}` |
 | `volume_tags` | map(string) | Tags para volúmenes | Metadatos | No | `{Backup = "daily"}` |
-| `name` | string | Nombre de la instancia | Básico | No | `web-server-01` |
-| `create` | bool | Crear la instancia | Control | No | `true/false` |
+| `vpc_security_group_ids` | list(string) | IDs de Security Groups existentes | Seguridad | No | `["sg-12345678"]` |
 
 ## Ejemplos de Configuración
 
@@ -284,41 +285,6 @@ ec2_instance_parameters = {
 }
 ```
 
-## Outputs
-
-| Output | Descripción | Tipo |
-|--------|-------------|------|
-| `wraper_ec2_instance` | Mapa completo de todas las instancias EC2 creadas | map(object) |
-
-### Acceso a Outputs Específicos
-
-```hcl
-# ID de la instancia
-instance_id = module.wrapper_ec2_instance.wraper_ec2_instance["web-server"].id
-
-# IP pública
-public_ip = module.wrapper_ec2_instance.wraper_ec2_instance["web-server"].public_ip
-
-# IP privada
-private_ip = module.wrapper_ec2_instance.wraper_ec2_instance["web-server"].private_ip
-
-# ARN de la instancia
-instance_arn = module.wrapper_ec2_instance.wraper_ec2_instance["web-server"].arn
-
-# Security Group ID
-security_group_id = module.wrapper_ec2_instance.wraper_ec2_instance["web-server"].security_group_id
-
-# IAM Instance Profile ARN
-iam_instance_profile_arn = module.wrapper_ec2_instance.wraper_ec2_instance["web-server"].iam_instance_profile_arn
-```
-
-## Requisitos
-
-### Versiones
-
-- **Terraform**: >= 1.5.7
-- **AWS Provider**: >= 6.0
-
 ### Permisos IAM Requeridos
 
 ```json
@@ -343,33 +309,6 @@ iam_instance_profile_arn = module.wrapper_ec2_instance.wraper_ec2_instance["web-
     }
   ]
 }
-```
-
-## Dependencias
-
-Este módulo utiliza internamente:
-
-- **terraform-aws-modules/ec2-instance/aws** (versión 6.1.1)
-
-## Estructura del Proyecto
-
-```
-wrapper_ec2_instance/
-├── main.tf                 # Configuración principal del módulo
-├── variables.tf            # Definición de variables
-├── outputs.tf              # Outputs del módulo
-├── locals.tf               # Variables locales y tags comunes
-├── versions.tf             # Requisitos de versiones
-├── data_sources.tf         # Fuentes de datos (si aplica)
-├── README.md               # Documentación básica
-├── docs/
-│   └── DOCUMENTATION.md    # Esta documentación
-└── example/
-    └── complete/
-        ├── main.tf         # Ejemplo completo de uso
-        ├── variables.tf    # Variables del ejemplo
-        ├── data_sources.tf # Fuentes de datos del ejemplo
-        └── locals.tf       # Variables locales del ejemplo
 ```
 
 ## Mejores Prácticas
@@ -457,13 +396,3 @@ wrapper_ec2_instance/
 3. **AMI no disponible**: Verificar que la AMI especificada existe en la región actual.
 
 4. **Límites de instancias**: Verificar los límites de servicio de EC2 en la cuenta AWS.
-
-### Logs y Debugging
-
-Para habilitar logs detallados:
-
-```bash
-export TF_LOG=DEBUG
-terraform plan
-terraform apply
-```
