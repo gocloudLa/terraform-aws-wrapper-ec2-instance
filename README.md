@@ -14,23 +14,16 @@ The Terraform wrapper for AWS EC2 Instance simplifies the management and deploym
 
 - 💰 [Spot Instances](#spot-instances) - Cost-effective instances for fault-tolerant workloads with reduced pricing
 
-- 🔒 [Security Groups & IAM](#security-groups--iam) - Customizable ingress/egress rules and granular IAM roles and policies
+- 🔒 [Security Groups & IAM](#security-groups-&-iam) - Customizable ingress/egress rules and granular IAM roles and policies
 
-- 💾 [EBS Volumes & Storage](#ebs-volumes--storage) - Additional EBS volumes with encryption and performance configuration
-
-- 🌐 [Elastic IP](#elastic-ip) - Static public IP addresses for instances
-
-- 🔧 [Session Manager](#session-manager) - Secure access without traditional SSH
-
-- 🏷️ [User Data](#user-data) - Automatic instance initialization scripts
+- 💾 [EBS Volumes & Storage](#ebs-volumes-&-storage) - Additional EBS volumes with encryption and performance configuration
 
 
 
 ### 🔗 External Modules
 | Name | Version |
 |------|------:|
-| <a href="https://github.com/terraform-aws-modules/terraform-aws-ec2-instance" target="_blank">terraform-aws-modules/ec2-instance/aws</a> | ~> 5.0 |
-| <a href="https://github.com/terraform-aws-modules/terraform-aws-security-group" target="_blank">terraform-aws-modules/security-group/aws</a> | ~> 5.0 |
+| <a href="https://github.com/terraform-aws-modules/terraform-aws-ec2-instance" target="_blank">terraform-aws-modules/ec2-instance/aws</a> | 6.1.1 |
 
 
 
@@ -112,6 +105,7 @@ ec2_instance_parameters = {
 Deploy standard EC2 instances with complete configuration including CPU, memory, and storage options.
 Supports various instance types from t3.micro to high-performance instances.
 
+
 <details><summary>Basic Web Server</summary>
 
 ```hcl
@@ -132,24 +126,18 @@ ec2_instance_parameters = {
         protocol    = "tcp"
       }
     }
-    
-    user_data_base64 = base64encode(<<-EOF
-      #!/bin/bash
-      yum update -y
-      yum install -y httpd
-      systemctl start httpd
-      systemctl enable httpd
-    EOF
-    )
   }
 }
 ```
 
+
 </details>
+
 
 ### Spot Instances
 Deploy Spot instances for workloads tolerant to interruptions with significantly reduced pricing.
 Configure spot price, interruption behavior, and launch groups for optimal cost savings.
+
 
 <details><summary>Spot Instance Configuration</summary>
 
@@ -166,40 +154,52 @@ ec2_instance_parameters = {
 }
 ```
 
+
 </details>
 
-### Session Manager Access
-Configure instances for secure access through AWS Systems Manager Session Manager without traditional SSH.
 
-<details><summary>Session Manager Configuration</summary>
+### Security Groups & IAM
+Create and manage Security Groups with customizable rules and IAM Instance Profiles with granular access policies.
+Supports both custom security groups and existing ones, with comprehensive IAM role management.
+
+
+<details><summary>Security Configuration</summary>
 
 ```hcl
 ec2_instance_parameters = {
-  "session-manager" = {
-    instance_type = "t3.micro"
-    subnet_id     = data.aws_subnets.private.ids[0]
-    
+  "secure-instance" = {
     create_iam_instance_profile = true
     iam_role_policies = {
       SSMCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+    }
+    
+    create_security_group = true
+    security_group_ingress_rules = {
+      "ssh" = {
+        cidr_blocks = ["10.0.0.0/8"]
+        from_port   = 22
+        to_port     = 22
+        protocol    = "tcp"
+      }
     }
   }
 }
 ```
 
+
 </details>
 
-### Custom Storage Configuration
+
+### EBS Volumes & Storage
 Configure additional EBS volumes with encryption, performance optimization, and various storage types.
+Supports gp3, io2, and other storage types with custom IOPS and throughput settings.
+
 
 <details><summary>Storage Configuration</summary>
 
 ```hcl
 ec2_instance_parameters = {
   "storage-optimized" = {
-    instance_type = "m5.xlarge"
-    subnet_id     = data.aws_subnets.private.ids[0]
-    
     root_block_device = {
       encrypted  = true
       type       = "gp3"
@@ -215,23 +215,12 @@ ec2_instance_parameters = {
         encrypted  = true
         throughput = 500
         iops       = 4000
-        tags = {
-          Purpose = "application-data"
-        }
-      }
-      "/dev/sdg" = {
-        size      = 100
-        type      = "io2"
-        encrypted = true
-        iops      = 1000
-        tags = {
-          Purpose = "database"
-        }
       }
     }
   }
 }
 ```
+
 
 </details>
 
@@ -239,36 +228,36 @@ ec2_instance_parameters = {
 
 
 ## 📑 Inputs
-| Name | Description | Type | Default | Required |
-|------|-------------|------|---------|----------|
-| ami | ID of the AMI to use | `string` | `null` | no |
-| ami_ssm_parameter | SSM parameter to get AMI | `string` | `null` | no |
-| instance_type | Type of EC2 instance | `string` | `"t3.micro"` | no |
-| availability_zone | Availability zone | `string` | `null` | no |
-| subnet_id | ID of the subnet where to create the instance | `string` | `null` | no |
-| associate_public_ip_address | Assign public IP automatically | `bool` | `null` | no |
-| create_eip | Create Elastic IP | `bool` | `false` | no |
-| create_security_group | Create Security Group | `bool` | `false` | no |
-| security_group_ingress_rules | Ingress rules for Security Group | `map(object)` | `{}` | no |
-| security_group_egress_rules | Egress rules for Security Group | `map(object)` | `{}` | no |
-| create_iam_instance_profile | Create IAM Instance Profile | `bool` | `false` | no |
-| iam_role_policies | IAM policies to attach | `map(string)` | `{}` | no |
-| root_block_device | Root volume configuration | `object` | `{}` | no |
-| ebs_volumes | Additional EBS volumes | `map(object)` | `{}` | no |
-| create_spot_instance | Create spot instance | `bool` | `false` | no |
-| spot_price | Maximum price for spot instance | `string` | `null` | no |
-| spot_type | Type of spot request | `string` | `"one-time"` | no |
-| user_data | Initialization script | `string` | `null` | no |
-| user_data_base64 | Initialization script in base64 | `string` | `null` | no |
-| key_name | Name of the Key Pair | `string` | `null` | no |
-| monitoring | Enable detailed monitoring | `bool` | `false` | no |
-| ebs_optimized | Enable EBS optimization | `bool` | `null` | no |
-| disable_api_termination | Disable termination via API | `bool` | `false` | no |
-| disable_api_stop | Disable stop via API | `bool` | `false` | no |
-| hibernation | Enable hibernation | `bool` | `false` | no |
-| cpu_credits | CPU credits mode for T instances | `string` | `null` | no |
-| metadata_options | Instance metadata options | `object` | `{}` | no |
-| tags | Tags for the instance | `map(string)` | `{}` | no |
+| Name                         | Description                                   | Type          | Default      | Required |
+| ---------------------------- | --------------------------------------------- | ------------- | ------------ | -------- |
+| ami                          | ID of the AMI to use                          | `string`      | `null`       | no       |
+| ami_ssm_parameter            | SSM parameter to get AMI                      | `string`      | `null`       | no       |
+| instance_type                | Type of EC2 instance                          | `string`      | `"t3.micro"` | no       |
+| availability_zone            | Availability zone                             | `string`      | `null`       | no       |
+| subnet_id                    | ID of the subnet where to create the instance | `string`      | `null`       | no       |
+| associate_public_ip_address  | Assign public IP automatically                | `bool`        | `null`       | no       |
+| create_eip                   | Create Elastic IP                             | `bool`        | `false`      | no       |
+| create_security_group        | Create Security Group                         | `bool`        | `false`      | no       |
+| security_group_ingress_rules | Ingress rules for Security Group              | `map(object)` | `{}`         | no       |
+| security_group_egress_rules  | Egress rules for Security Group               | `map(object)` | `{}`         | no       |
+| create_iam_instance_profile  | Create IAM Instance Profile                   | `bool`        | `false`      | no       |
+| iam_role_policies            | IAM policies to attach                        | `map(string)` | `{}`         | no       |
+| root_block_device            | Root volume configuration                     | `object`      | `{}`         | no       |
+| ebs_volumes                  | Additional EBS volumes                        | `map(object)` | `{}`         | no       |
+| create_spot_instance         | Create spot instance                          | `bool`        | `false`      | no       |
+| spot_price                   | Maximum price for spot instance               | `string`      | `null`       | no       |
+| spot_type                    | Type of spot request                          | `string`      | `"one-time"` | no       |
+| user_data                    | Initialization script                         | `string`      | `null`       | no       |
+| user_data_base64             | Initialization script in base64               | `string`      | `null`       | no       |
+| key_name                     | Name of the Key Pair                          | `string`      | `null`       | no       |
+| monitoring                   | Enable detailed monitoring                    | `bool`        | `false`      | no       |
+| ebs_optimized                | Enable EBS optimization                       | `bool`        | `null`       | no       |
+| disable_api_termination      | Disable termination via API                   | `bool`        | `false`      | no       |
+| disable_api_stop             | Disable stop via API                          | `bool`        | `false`      | no       |
+| hibernation                  | Enable hibernation                            | `bool`        | `false`      | no       |
+| cpu_credits                  | CPU credits mode for T instances              | `string`      | `null`       | no       |
+| metadata_options             | Instance metadata options                     | `object`      | `{}`         | no       |
+| tags                         | Tags for the instance                         | `map(string)` | `{}`         | no       |
 
 
 
