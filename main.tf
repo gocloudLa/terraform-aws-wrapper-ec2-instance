@@ -1,7 +1,7 @@
 module "ec2_instance" {
   for_each = var.ec2_instance_parameters
-  source  = "terraform-aws-modules/ec2-instance/aws"
-  version = "6.1.1"
+  source   = "terraform-aws-modules/ec2-instance/aws"
+  version  = "6.1.1"
 
   ami                                  = try(each.value.ami, var.ec2_instance_defaults.ami, null)
   ami_ssm_parameter                    = try(each.value.ami_ssm_parameter, var.ec2_instance_defaults.ami_ssm_parameter, "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64")
@@ -52,9 +52,9 @@ module "ec2_instance" {
     http_put_response_hop_limit = 1
     http_tokens                 = "required"
   })
-  monitoring                 = try(each.value.monitoring, var.ec2_instance_defaults.monitoring, null)
-  name                       = try(each.value.name, var.ec2_instance_defaults.name, each.key)
-  network_interface          = try(each.value.network_interface, var.ec2_instance_defaults.network_interface, null)
+  monitoring        = try(each.value.monitoring, var.ec2_instance_defaults.monitoring, null)
+  name              = try(each.value.name, var.ec2_instance_defaults.name, each.key)
+  network_interface = try(each.value.network_interface, var.ec2_instance_defaults.network_interface, null)
   # placement_group            = try(each.value.placement_group, var.ec2_instance_defaults.placement_group, null)
   # placement_partition_number = try(each.value.placement_partition_number, var.ec2_instance_defaults.placement_partition_number, null)
   private_dns_name_options   = try(each.value.private_dns_name_options, var.ec2_instance_defaults.private_dns_name_options, null)
@@ -95,8 +95,8 @@ module "ec2_instance" {
   user_data                           = try(each.value.user_data, var.ec2_instance_defaults.user_data, null)
   user_data_base64                    = try(each.value.user_data_base64, var.ec2_instance_defaults.user_data_base64, null)
   user_data_replace_on_change         = try(each.value.user_data_replace_on_change, var.ec2_instance_defaults.user_data_replace_on_change, null)
-  volume_tags                         = try(each.value.volume_tags, var.ec2_instance_defaults.volume_tags, merge(local.common_tags, try(each.value.tags, var.ec2_instance_defaults, null)) )
+  volume_tags                         = try(each.value.volume_tags, var.ec2_instance_defaults.volume_tags, merge(local.common_tags, try(each.value.tags, var.ec2_instance_defaults, null)))
   vpc_security_group_ids              = try(each.value.vpc_security_group_ids, var.ec2_instance_defaults.vpc_security_group_ids, [])
 
-  tags                                = merge(local.common_tags, try(each.value.tags, var.ec2_instance_defaults, null))
+  tags = merge(local.common_tags, try(each.value.tags, var.ec2_instance_defaults, null))
 }
