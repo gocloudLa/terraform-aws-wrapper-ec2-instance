@@ -6,12 +6,8 @@ variable "metadata" {
   type = any
 }
 
-variable "project" {
-  type = string
-}
-
 /*----------------------------------------------------------------------*/
-/* ALB | Variable Definition                                            */
+/* EC2 Instance | Variable Definition                                   */
 /*----------------------------------------------------------------------*/
 
 variable "ec2_instance_parameters" {
