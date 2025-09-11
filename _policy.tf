@@ -15,7 +15,7 @@ locals {
 resource "aws_iam_policy" "this" {
   for_each = local.custom_policy_parameters
 
-  name   = "${local.common_name}-${each.key}-policy"
+  name   = "${local.common_name}-${each.key}"
   policy = each.value.custom_policy.json
   tags   = each.value.tags
 }
