@@ -18,12 +18,17 @@ The Terraform wrapper for AWS EC2 Instance simplifies the management and deploym
 
 - 💾 [EBS Volumes & Storage](#ebs-volumes-&-storage) - Additional EBS volumes with encryption and performance configuration
 
+- 🔑 [SSH Key Pairs](#ssh-key-pairs) - Creates and manages SSH key pairs with private key storage in SSM Parameter Store
+
+- 📋 [Custom IAM Policies](#custom-iam-policies) - Supports custom IAM policies for instances with automatic role attachment
+
 
 
 ### 🔗 External Modules
 | Name | Version |
 |------|------:|
 | <a href="https://github.com/terraform-aws-modules/terraform-aws-ec2-instance" target="_blank">terraform-aws-modules/ec2-instance/aws</a> | 6.1.1 |
+| <a href="https://github.com/terraform-aws-modules/terraform-aws-key-pair" target="_blank">terraform-aws-modules/key-pair/aws</a> | 2.1.0 |
 
 
 
@@ -225,6 +230,57 @@ ec2_instance_parameters = {
 </details>
 
 
+### SSH Key Pairs
+Automatically create SSH key pairs for EC2 instances with secure private key storage in AWS Systems Manager Parameter Store.
+Supports RSA and ED25519 algorithms with configurable key sizes and automatic key rotation.
+
+
+<details><summary>SSH Key Configuration</summary>
+
+```hcl
+ec2_instance_parameters = {
+  "web-server" = {
+    create_ssh_key         = true
+    create_private_key     = true
+    private_key_algorithm  = "RSA"
+    private_key_rsa_bits   = 4096
+  }
+}
+```
+
+
+</details>
+
+
+### Custom IAM Policies
+Create and attach custom IAM policies to EC2 instances with automatic role integration.
+Define custom permissions and policies that are automatically attached to the instance IAM role.
+
+
+<details><summary>Custom Policy Configuration</summary>
+
+```hcl
+ec2_instance_parameters = {
+  "app-server" = {
+    create_custom_policy = true
+    custom_policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Effect = "Allow"
+          Action = ["s3:GetObject", "s3:PutObject"]
+          Resource = "arn:aws:s3:::my-bucket/*"
+        }
+      ]
+    })
+  }
+}
+```
+
+
+</details>
+
+
 
 
 ## 📑 Inputs
@@ -232,27 +288,34 @@ ec2_instance_parameters = {
 | ---------------------------- | --------------------------------------------- | ------------- | ------------ | -------- |
 | ami                          | ID of the AMI to use                          | `string`      | `null`       | no       |
 | ami_ssm_parameter            | SSM parameter to get AMI                      | `string`      | `null`       | no       |
-| instance_type                | Type of EC2 instance                          | `string`      | `"t3.micro"` | no       |
-| availability_zone            | Availability zone                             | `string`      | `null`       | no       |
-| subnet_id                    | ID of the subnet where to create the instance | `string`      | `null`       | no       |
 | associate_public_ip_address  | Assign public IP automatically                | `bool`        | `null`       | no       |
+| availability_zone            | Availability zone                             | `string`      | `null`       | no       |
+| create_custom_policy         | Create custom IAM policy                      | `bool`        | `false`      | no       |
 | create_eip                   | Create Elastic IP                             | `bool`        | `false`      | no       |
-| create_security_group        | Create Security Group                         | `bool`        | `false`      | no       |
-| security_group_ingress_rules | Ingress rules for Security Group              | `map(object)` | `{}`         | no       |
-| security_group_egress_rules  | Egress rules for Security Group               | `map(object)` | `{}`         | no       |
 | create_iam_instance_profile  | Create IAM Instance Profile                   | `bool`        | `false`      | no       |
-| iam_role_policies            | IAM policies to attach                        | `map(string)` | `{}`         | no       |
-| root_block_device            | Root volume configuration                     | `object`      | `{}`         | no       |
-| ebs_volumes                  | Additional EBS volumes                        | `map(object)` | `{}`         | no       |
+| create_private_key           | Create private key and store it in SSM        | `bool`        | `false`      | no       |
+| create_security_group        | Create Security Group                         | `bool`        | `false`      | no       |
 | create_spot_instance         | Create spot instance                          | `bool`        | `false`      | no       |
+| create_ssh_key               | Create SSH key pair                           | `bool`        | `false`      | no       |
+| custom_policy                | Custom IAM policy JSON                        | `string`      | `null`       | no       |
+| disable_api_termination      | Disable API termination                       | `bool`        | `null`       | no       |
+| ebs_optimized                | Enable EBS optimization                       | `bool`        | `null`       | no       |
+| ebs_volumes                  | Additional EBS volumes                        | `map(object)` | `{}`         | no       |
+| iam_role_policies            | IAM policies to attach                        | `map(string)` | `{}`         | no       |
+| instance_type                | Type of EC2 instance                          | `string`      | `"t3.micro"` | no       |
+| key_name                     | Name of the Key Pair                          | `string`      | `null`       | no       |
+| key_name_prefix              | Prefix for generated key name                 | `string`      | `null`       | no       |
+| monitoring                   | Enable detailed monitoring                    | `bool`        | `false`      | no       |
+| private_key_algorithm        | Algorithm for private key                     | `string`      | `"RSA"`      | no       |
+| private_key_rsa_bits         | RSA key size in bits                          | `number`      | `4096`       | no       |
+| public_key                   | Public key material for key pair              | `string`      | `null`       | no       |
+| root_block_device            | Root volume configuration                     | `object`      | `{}`         | no       |
+| security_group_egress_rules  | Egress rules for Security Group               | `map(object)` | `{}`         | no       |
+| security_group_ingress_rules | Ingress rules for Security Group              | `map(object)` | `{}`         | no       |
 | spot_price                   | Maximum price for spot instance               | `string`      | `null`       | no       |
 | spot_type                    | Type of spot request                          | `string`      | `"one-time"` | no       |
+| subnet_id                    | ID of the subnet where to create the instance | `string`      | `null`       | no       |
 | user_data                    | Initialization script                         | `string`      | `null`       | no       |
-| user_data_base64             | Initialization script in base64               | `string`      | `null`       | no       |
-| key_name                     | Name of the Key Pair                          | `string`      | `null`       | no       |
-| monitoring                   | Enable detailed monitoring                    | `bool`        | `false`      | no       |
-| ebs_optimized                | Enable EBS optimization                       | `bool`        | `null`       | no       |
-| disable_api_termination      | Disable termination via API                   | `bool`        | `false`      | no       |
 | disable_api_stop             | Disable stop via API                          | `bool`        | `false`      | no       |
 | hibernation                  | Enable hibernation                            | `bool`        | `false`      | no       |
 | cpu_credits                  | CPU credits mode for T instances              | `string`      | `null`       | no       |
