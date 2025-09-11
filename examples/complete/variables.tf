@@ -6,12 +6,8 @@
 #   type = any
 # }
 
-# variable "project" {
-#   type = string
-# }
-
 /*----------------------------------------------------------------------*/
-/* EC2 | Variable Definition                                            */
+/* EC2 Instance | Variable Definition                                   */
 /*----------------------------------------------------------------------*/
 
 variable "ec2_instance_defaults" {

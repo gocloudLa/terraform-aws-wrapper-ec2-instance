@@ -2,19 +2,18 @@ module "wrapper_ec2_instance" {
   source = "../../"
 
   metadata = local.metadata
-  project  = local.project
 
   ec2_instance_parameters = {
 
-    "ec2_complete" = {
+    "Excomplete" = {
 
       # name = example""
       # ignore_ami_changes = true
 
       ami               = data.aws_ami.amazon_linux.id
       instance_type     = "t2.small" # used to set core count below
-      availability_zone = data.aws_availability_zones.available.names[0]
-      subnet_id         = data.aws_subnets.private.ids[0]
+      availability_zone = data.aws_availability_zones.available.names[1]
+      subnet_id         = data.aws_subnets.public.ids[0]
       create_eip        = true
       disable_api_stop  = false
 
@@ -26,12 +25,22 @@ module "wrapper_ec2_instance" {
           ip_protocol = "tcp"
           to_port     = 80
         }
+        # "ssh" = {
+        #   cidr_ipv4   = "MY_IP"
+        #   from_port   = 22
+        #   ip_protocol = "tcp"
+        #   to_port     = 22
+        # }
       }
 
+      create_key                  = true
+      create_private_key          = true
+      create_custom_policy        = true
       create_iam_instance_profile = true
+      custom_policy               = data.aws_iam_policy_document.example_policy
       iam_role_description        = "IAM role for EC2 instance"
       iam_role_policies = {
-        AdministratorAccess = "arn:aws:iam::aws:policy/AdministratorAccess"
+        AdministratorAccess = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
       }
 
       # only one of these can be enabled at a time
@@ -51,7 +60,7 @@ module "wrapper_ec2_instance" {
         encrypted  = true
         type       = "gp3"
         throughput = 200
-        size       = 50
+        size       = 10
         tags = {
           Name = "my-root-block"
         }
@@ -68,23 +77,8 @@ module "wrapper_ec2_instance" {
           }
         }
       }
-
-      tags = local.common_tags
     }
-
-    # "ec2-session-manager" = {
-
-    #   subnet_id = data.aws_subnets.private.ids[0]
-
-    #   create_iam_instance_profile = true
-    #   iam_role_description        = "IAM role for EC2 instance"
-    #   iam_role_policies = {
-    #     AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
-    #   }
-
-    #   tags = local.common_tags
-    # }
-    # "ec2_t2_unlimited" = {
+    # "exT2Unlimited" = {
 
     #   instance_type               = "t2.micro"
     #   cpu_credits                 = "unlimited"
