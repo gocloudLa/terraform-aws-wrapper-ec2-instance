@@ -12,7 +12,7 @@ locals {
         public_key            = sensitive(try(ec2_instance_config.public_key, ""))
         tags                  = merge(lookup(ec2_instance_config, "tags", local.common_tags), { Name = "${local.common_name}-${ec2_instance_key}-key" })
       }
-    } if try(ec2_instance_config.create_key, false) 
+    } if try(ec2_instance_config.create_key, false)
   ]
   ssh_key_parameters = merge(flatten(local.ssh_key_parameters_tmp)...)
 }
@@ -39,7 +39,7 @@ resource "aws_ssm_parameter" "this" {
     if v.create_private_key
   }
 
-  name      = "/KEY_PAIR/${local.common_name}-${each.key}"
-  type      = "SecureString"
-  value     = sensitive(module.key-pair[each.key].private_key_pem)
+  name  = "/KEY_PAIR/${local.common_name}-${each.key}"
+  type  = "SecureString"
+  value = sensitive(module.key-pair[each.key].private_key_pem)
 }
