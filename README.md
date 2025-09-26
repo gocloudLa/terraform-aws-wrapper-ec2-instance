@@ -34,70 +34,74 @@ The Terraform wrapper for AWS EC2 Instance simplifies the management and deploym
 
 ## 🚀 Quick Start
 ```hcl
-ec2_instance_parameters = {
-  "web-server" = {
-    ami                    = data.aws_ami.amazon_linux.id
-    instance_type          = "t3.medium"
-    availability_zone      = data.aws_availability_zones.available.names[0]
-    subnet_id              = data.aws_subnets.private.ids[0]
+module "wrapper_ec2_instance" {
+  source = "gocloudLa/wrapper-ec2-instance/aws"
+  
+  metadata = {
+    aws_region     = "us-east-1"
+    environment    = "Production"
+    project        = "Example"
+    public_domain  = "democorp.cloud"
+    private_domain = "democorp"
     
-    # Elastic IP
-    create_eip             = true
-    
-    # Security Group
-    create_security_group = true
-    security_group_ingress_rules = {
-      "http" = {
-        cidr_blocks = ["10.0.0.0/8"]
-        description = "HTTP access"
-        from_port   = 80
-        protocol    = "tcp"
-        to_port     = 80
+    key = {
+      company = "gcl"
+      region  = "use1"
+      env     = "l01"
+      project = "example"
+      layer   = "workload"
+    }
+  }
+  
+  ec2_instance_parameters = {
+    "ExComplete" = {
+      ami_filter = {
+        name = ["al2023-ami-*-x86_64"]
       }
-      "ssh" = {
-        cidr_blocks = ["10.0.0.0/8"]
-        description = "SSH access"
-        from_port   = 22
-        protocol    = "tcp"
-        to_port     = 22
+      instance_type = "t2.small"
+      subnet_name   = "${local.common_name_prefix}-private-us-east-1a"
+      create_eip    = true
+      
+      create_security_group = true
+      security_group_ingress_rules = {
+        "http" = {
+          cidr_ipv4   = "0.0.0.0/0"
+          from_port   = 80
+          ip_protocol = "tcp"
+          to_port     = 80
+        }
       }
-    }
-    
-    # IAM Role
-    create_iam_instance_profile = true
-    iam_role_description        = "IAM role for web server"
-    iam_role_policies = {
-      S3ReadOnly = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
-    }
-    
-    # Storage
-    root_block_device = {
-      encrypted  = true
-      type       = "gp3"
-      size       = 20
-    }
-    
-    ebs_volumes = {
-      "/dev/sdf" = {
-        size       = 100
+      
+      create_key                  = true
+      create_private_key          = true
+      create_custom_policy        = true
+      create_iam_instance_profile = true
+      iam_role_description        = "IAM role for EC2 instance"
+      iam_role_policies = {
+        SSMCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+      }
+      
+      hibernation = true
+      user_data_base64 = base64encode(<<-EOT
+        #!/bin/bash
+        echo "Hello Terraform!"
+      EOT
+      )
+      
+      root_block_device = {
         encrypted  = true
         type       = "gp3"
+        throughput = 200
+        size       = 30
       }
-    }
-    
-    # User Data
-    user_data_base64 = base64encode(<<-EOF
-      #!/bin/bash
-      yum update -y
-      yum install -y httpd
-      systemctl start httpd
-      systemctl enable httpd
-    EOF
-    )
-    
-    tags = {
-      Environment = "production"
-      Application = "web-server"
+      
+      ebs_volumes = {
+        "/dev/sdf" = {
+          size       = 5
+          throughput = 200
+          encrypted  = true
+        }
+      }
     }
   }
 }
@@ -111,25 +115,33 @@ Deploy standard EC2 instances with complete configuration including CPU, memory,
 Supports various instance types from t3.micro to high-performance instances.
 
 
-<details><summary>Basic Web Server</summary>
+<details><summary>Simple Instance</summary>
 
 ```hcl
 ec2_instance_parameters = {
-  "web-basic" = {
-    ami           = data.aws_ami.amazon_linux.id
-    instance_type = "t3.small"
-    subnet_id     = data.aws_subnets.public.ids[0]
+  "ExSimple" = {
+    # Basic configuration with minimal settings
+    instance_type = "t3.micro"
+    subnet_name   = "${local.common_name_prefix}-private-us-east-1a"
+  }
+}
+```
+
+
+</details>
+
+<details><summary>T2 Unlimited Credits</summary>
+
+```hcl
+ec2_instance_parameters = {
+  "exT2Unlimited" = {
+    instance_type               = "t2.micro"
+    cpu_credits                 = "unlimited"
+    subnet_name                 = "${local.common_name_prefix}-private-us-east-1a"
+    associate_public_ip_address = true
     
-    create_eip = true
-    
-    create_security_group = true
-    security_group_ingress_rules = {
-      "http" = {
-        cidr_blocks = ["10.0.0.0/8"]
-        from_port   = 80
-        to_port     = 80
-        protocol    = "tcp"
-      }
+    maintenance_options = {
+      auto_recovery = "default"
     }
   }
 }
@@ -148,13 +160,52 @@ Configure spot price, interruption behavior, and launch groups for optimal cost 
 
 ```hcl
 ec2_instance_parameters = {
-  "spot-instance" = {
+  "ec2_spot_instance" = {
     create_spot_instance = true
-    spot_price          = "0.05"
-    spot_type           = "persistent"
     
-    instance_type = "m5.large"
-    subnet_id     = data.aws_subnets.private.ids[0]
+    availability_zone     = "use1-az2"
+    subnet_name           = "${local.common_name_prefix}-private-us-east-1a"
+    create_security_group = true
+    security_group_ingress_rules = {
+      "http" = {
+        cidr_ipv4   = "0.0.0.0/0"
+        from_port   = 80
+        ip_protocol = "tcp"
+        to_port     = 80
+      }
+    }
+    associate_public_ip_address = true
+    
+    # Spot request specific attributes
+    spot_price                = "0.1"
+    spot_wait_for_fulfillment = true
+    spot_type                 = "persistent"
+    
+    user_data_base64 = base64encode(<<-EOT
+      #!/bin/bash
+      echo "Hello Terraform!"
+    EOT
+    )
+    
+    cpu_options = {
+      core_count       = 2
+      threads_per_core = 1
+    }
+    
+    root_block_device = {
+      encrypted  = true
+      type       = "gp3"
+      throughput = 200
+      size       = 50
+    }
+    
+    ebs_volumes = {
+      "/dev/sdf" = {
+        size       = 5
+        throughput = 200
+        encrypted  = true
+      }
+    }
   }
 }
 ```
@@ -172,20 +223,24 @@ Supports both custom security groups and existing ones, with comprehensive IAM r
 
 ```hcl
 ec2_instance_parameters = {
-  "secure-instance" = {
-    create_iam_instance_profile = true
-    iam_role_policies = {
-      SSMCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
-    }
-    
+  "ExComplete" = {
     create_security_group = true
     security_group_ingress_rules = {
-      "ssh" = {
-        cidr_blocks = ["10.0.0.0/8"]
-        from_port   = 22
-        to_port     = 22
-        protocol    = "tcp"
+      "http" = {
+        cidr_ipv4   = "0.0.0.0/0"
+        from_port   = 80
+        ip_protocol = "tcp"
+        to_port     = 80
       }
+    }
+    
+    create_key                  = true
+    create_private_key          = true
+    create_custom_policy        = true
+    create_iam_instance_profile = true
+    iam_role_description        = "IAM role for EC2 instance"
+    iam_role_policies = {
+      SSMCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
     }
   }
 }
@@ -204,22 +259,26 @@ Supports gp3, io2, and other storage types with custom IOPS and throughput setti
 
 ```hcl
 ec2_instance_parameters = {
-  "storage-optimized" = {
+  "ExComplete" = {
+    enable_volume_tags = false
     root_block_device = {
       encrypted  = true
       type       = "gp3"
-      size       = 50
-      throughput = 250
-      iops       = 3000
+      throughput = 200
+      size       = 30
+      tags = {
+        Name = "my-root-block"
+      }
     }
     
     ebs_volumes = {
       "/dev/sdf" = {
-        size       = 500
-        type       = "gp3"
+        size       = 5
+        throughput = 200
         encrypted  = true
-        throughput = 500
-        iops       = 4000
+        tags = {
+          MountPoint = "/mnt/data"
+        }
       }
     }
   }
@@ -239,11 +298,10 @@ Supports RSA and ED25519 algorithms with configurable key sizes and automatic ke
 
 ```hcl
 ec2_instance_parameters = {
-  "web-server" = {
-    create_ssh_key         = true
-    create_private_key     = true
-    private_key_algorithm  = "RSA"
-    private_key_rsa_bits   = 4096
+  "ExComplete" = {
+    create_key         = true
+    create_private_key = true
+    # Private key will be stored in SSM Parameter Store
   }
 }
 ```
@@ -260,19 +318,31 @@ Define custom permissions and policies that are automatically attached to the in
 <details><summary>Custom Policy Configuration</summary>
 
 ```hcl
+# Define custom policy in data source
+data "aws_iam_policy_document" "example_policy" {
+  statement {
+    sid    = "ListBuckets"
+    effect = "Allow"
+    actions   = ["s3:ListAllMyBuckets"]
+    resources = ["*"]
+  }
+  
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:ListBucket",
+      "s3:GetBucketLocation"
+    ]
+    resources = ["arn:aws:s3:::/example"]
+  }
+}
+
+# Use in EC2 instance configuration
 ec2_instance_parameters = {
-  "app-server" = {
-    create_custom_policy = true
-    custom_policy = jsonencode({
-      Version = "2012-10-17"
-      Statement = [
-        {
-          Effect = "Allow"
-          Action = ["s3:GetObject", "s3:PutObject"]
-          Resource = "arn:aws:s3:::my-bucket/*"
-        }
-      ]
-    })
+  "ExComplete" = {
+    create_custom_policy        = true
+    create_iam_instance_profile = true
+    custom_policy               = data.aws_iam_policy_document.example_policy
   }
 }
 ```
@@ -284,95 +354,100 @@ ec2_instance_parameters = {
 
 
 ## 📑 Inputs
-| Name                                 | Description                                   | Type           | Default                                                                                                                                                                                   | Required   |
-| ------------------------------------ | --------------------------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
-| Name                                 | Description                                   | Type           | Default                                                                                                                                                                                   | Required   |
-| ------                               | -------------                                 | ------         | ---------                                                                                                                                                                                 | :--------: |
-| ami                                  | ID of the AMI to use                          | `string`       | `null`                                                                                                                                                                                    | no         |
-| ami_ssm_parameter                    | SSM parameter to get AMI                      | `string`       | `/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64`                                                                                                                   | no         |
-| associate_public_ip_address          | Assign public IP automatically                | `bool`         | `null`                                                                                                                                                                                    | no         |
-| availability_zone                    | Availability zone                             | `string`       | `null`                                                                                                                                                                                    | no         |
-| capacity_reservation_specification   | Capacity reservation specification            | `object`       | `null`                                                                                                                                                                                    | no         |
-| cpu_credits                          | CPU credits mode for T instances              | `string`       | `null`                                                                                                                                                                                    | no         |
-| cpu_options                          | CPU options for the instance                  | `object`       | `null`                                                                                                                                                                                    | no         |
-| create                               | Whether to create the instance                | `bool`         | `true`                                                                                                                                                                                    | no         |
-| create_custom_policy                 | Create custom IAM policy                      | `bool`         | `false`                                                                                                                                                                                   | no         |
-| create_eip                           | Create Elastic IP                             | `bool`         | `false`                                                                                                                                                                                   | no         |
-| create_iam_instance_profile          | Create IAM Instance Profile                   | `bool`         | `false`                                                                                                                                                                                   | no         |
-| create_private_key                   | Create private key and store it in SSM        | `bool`         | `false`                                                                                                                                                                                   | no         |
-| create_security_group                | Create Security Group                         | `bool`         | `true`                                                                                                                                                                                    | no         |
-| create_spot_instance                 | Create spot instance                          | `bool`         | `false`                                                                                                                                                                                   | no         |
-| create_ssh_key                       | Create SSH key pair                           | `bool`         | `false`                                                                                                                                                                                   | no         |
-| custom_policy                        | Custom IAM policy JSON                        | `string`       | `null`                                                                                                                                                                                    | no         |
-| disable_api_stop                     | Disable stop via API                          | `bool`         | `null`                                                                                                                                                                                    | no         |
-| disable_api_termination              | Disable API termination                       | `bool`         | `null`                                                                                                                                                                                    | no         |
-| ebs_optimized                        | Enable EBS optimization                       | `bool`         | `null`                                                                                                                                                                                    | no         |
-| ebs_volumes                          | Additional EBS volumes                        | `map(object)`  | `null`                                                                                                                                                                                    | no         |
-| eip_domain                           | Domain for EIP                                | `string`       | `vpc`                                                                                                                                                                                     | no         |
-| eip_tags                             | Tags for EIP                                  | `map(string)`  | `{}`                                                                                                                                                                                      | no         |
-| enable_primary_ipv6                  | Enable primary IPv6                           | `bool`         | `null`                                                                                                                                                                                    | no         |
-| enable_volume_tags                   | Enable volume tags                            | `bool`         | `true`                                                                                                                                                                                    | no         |
-| enclave_options_enabled              | Enable enclave options                        | `bool`         | `null`                                                                                                                                                                                    | no         |
-| ephemeral_block_device               | Ephemeral block device configuration          | `list(object)` | `null`                                                                                                                                                                                    | no         |
-| get_password_data                    | Get password data                             | `bool`         | `null`                                                                                                                                                                                    | no         |
-| hibernation                          | Enable hibernation                            | `bool`         | `null`                                                                                                                                                                                    | no         |
-| host_id                              | Host ID for dedicated host                    | `string`       | `null`                                                                                                                                                                                    | no         |
-| host_resource_group_arn              | Host resource group ARN                       | `string`       | `null`                                                                                                                                                                                    | no         |
-| iam_instance_profile                 | IAM instance profile name                     | `string`       | `null`                                                                                                                                                                                    | no         |
-| iam_role_description                 | Description for IAM role                      | `string`       | `null`                                                                                                                                                                                    | no         |
-| iam_role_name                        | Name for IAM role                             | `string`       | `null`                                                                                                                                                                                    | no         |
-| iam_role_path                        | Path for IAM role                             | `string`       | `null`                                                                                                                                                                                    | no         |
-| iam_role_permissions_boundary        | Permissions boundary for IAM role             | `string`       | `null`                                                                                                                                                                                    | no         |
-| iam_role_policies                    | IAM policies to attach                        | `map(string)`  | `{}`                                                                                                                                                                                      | no         |
-| iam_role_tags                        | Tags for IAM role                             | `map(string)`  | `{}`                                                                                                                                                                                      | no         |
-| iam_role_use_name_prefix             | Use name prefix for IAM role                  | `bool`         | `true`                                                                                                                                                                                    | no         |
-| ignore_ami_changes                   | Ignore AMI changes                            | `bool`         | `false`                                                                                                                                                                                   | no         |
-| instance_initiated_shutdown_behavior | Instance initiated shutdown behavior          | `string`       | `null`                                                                                                                                                                                    | no         |
-| instance_market_options              | Instance market options                       | `object`       | `null`                                                                                                                                                                                    | no         |
-| instance_tags                        | Tags for instance                             | `map(string)`  | `{}`                                                                                                                                                                                      | no         |
-| instance_type                        | Type of EC2 instance                          | `string`       | `t3.micro`                                                                                                                                                                                | no         |
-| ipv6_address_count                   | Number of IPv6 addresses                      | `number`       | `null`                                                                                                                                                                                    | no         |
-| ipv6_addresses                       | List of IPv6 addresses                        | `list(string)` | `null`                                                                                                                                                                                    | no         |
-| key_name                             | Name of the Key Pair                          | `string`       | `null`                                                                                                                                                                                    | no         |
-| key_name_prefix                      | Prefix for generated key name                 | `string`       | `null`                                                                                                                                                                                    | no         |
-| launch_template                      | Launch template configuration                 | `object`       | `null`                                                                                                                                                                                    | no         |
-| maintenance_options                  | Maintenance options                           | `object`       | `null`                                                                                                                                                                                    | no         |
-| metadata_options                     | Instance metadata options                     | `object`       | `{http_endpoint="enabled", http_put_response_hop_limit=1, http_tokens="required"}`                                                                                                        | no         |
-| monitoring                           | Enable detailed monitoring                    | `bool`         | `null`                                                                                                                                                                                    | no         |
-| name                                 | Name of the instance                          | `string`       | `null`                                                                                                                                                                                    | no         |
-| network_interface                    | Network interface configuration               | `list(object)` | `null`                                                                                                                                                                                    | no         |
-| private_dns_name_options             | Private DNS name options                      | `object`       | `null`                                                                                                                                                                                    | no         |
-| private_ip                           | Private IP address                            | `string`       | `null`                                                                                                                                                                                    | no         |
-| private_key_algorithm                | Algorithm for private key                     | `string`       | `RSA`                                                                                                                                                                                     | no         |
-| private_key_rsa_bits                 | RSA key size in bits                          | `number`       | `4096`                                                                                                                                                                                    | no         |
-| public_key                           | Public key material for key pair              | `string`       | `null`                                                                                                                                                                                    | no         |
-| region                               | AWS region                                    | `string`       | `null`                                                                                                                                                                                    | no         |
-| root_block_device                    | Root volume configuration                     | `object`       | `null`                                                                                                                                                                                    | no         |
-| secondary_private_ips                | Secondary private IP addresses                | `list(string)` | `null`                                                                                                                                                                                    | no         |
-| security_group_description           | Description for security group                | `string`       | `null`                                                                                                                                                                                    | no         |
-| security_group_egress_rules          | Egress rules for Security Group               | `map(object)`  | `{ipv4_default={cidr_ipv4="0.0.0.0/0", description="Allow all IPv4 traffic", ip_protocol="-1"}, ipv6_default={cidr_ipv6="::/0", description="Allow all IPv6 traffic", ip_protocol="-1"}}` | no         |
-| security_group_ingress_rules         | Ingress rules for Security Group              | `map(object)`  | `null`                                                                                                                                                                                    | no         |
-| security_group_name                  | Name for security group                       | `string`       | `null`                                                                                                                                                                                    | no         |
-| security_group_tags                  | Tags for security group                       | `map(string)`  | `{}`                                                                                                                                                                                      | no         |
-| security_group_use_name_prefix       | Use name prefix for security group            | `bool`         | `true`                                                                                                                                                                                    | no         |
-| security_group_vpc_id                | VPC ID for security group                     | `string`       | `null`                                                                                                                                                                                    | no         |
-| source_dest_check                    | Enable source/destination check               | `bool`         | `null`                                                                                                                                                                                    | no         |
-| spot_instance_interruption_behavior  | Spot instance interruption behavior           | `string`       | `null`                                                                                                                                                                                    | no         |
-| spot_launch_group                    | Spot launch group                             | `string`       | `null`                                                                                                                                                                                    | no         |
-| spot_price                           | Maximum price for spot instance               | `string`       | `null`                                                                                                                                                                                    | no         |
-| spot_type                            | Type of spot request                          | `string`       | `null`                                                                                                                                                                                    | no         |
-| spot_valid_from                      | Spot request valid from                       | `string`       | `null`                                                                                                                                                                                    | no         |
-| spot_valid_until                     | Spot request valid until                      | `string`       | `null`                                                                                                                                                                                    | no         |
-| spot_wait_for_fulfillment            | Wait for spot fulfillment                     | `bool`         | `null`                                                                                                                                                                                    | no         |
-| subnet_id                            | ID of the subnet where to create the instance | `string`       | `null`                                                                                                                                                                                    | no         |
-| tags                                 | Tags for the instance                         | `map(string)`  | `{}`                                                                                                                                                                                      | no         |
-| tenancy                              | Tenancy of the instance                       | `string`       | `null`                                                                                                                                                                                    | no         |
-| timeouts                             | Timeout configuration                         | `object`       | `{}`                                                                                                                                                                                      | no         |
-| user_data                            | Initialization script                         | `string`       | `null`                                                                                                                                                                                    | no         |
-| user_data_base64                     | Initialization script in base64               | `string`       | `null`                                                                                                                                                                                    | no         |
-| user_data_replace_on_change          | Replace instance on user data change          | `bool`         | `null`                                                                                                                                                                                    | no         |
-| volume_tags                          | Tags for volumes                              | `map(string)`  | `{}`                                                                                                                                                                                      | no         |
-| vpc_security_group_ids               | List of security group IDs                    | `list(string)` | `[]`                                                                                                                                                                                      | no         |
+| Name                                 | Description                                     | Type                | Default                                                                                                                                                                                   | Required   |
+| ------------------------------------ | ----------------------------------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| Name                                 | Description                                     | Type                | Default                                                                                                                                                                                   | Required   |
+| ------                               | -------------                                   | ------              | ---------                                                                                                                                                                                 | :--------: |
+| ami                                  | ID of the AMI to use                            | `string`            | `null`                                                                                                                                                                                    | no         |
+| ami_filter                           | Filter to find AMI by name                      | `map(list(string))` | `{name = ["al2023-ami-*-x86_64"]}`                                                                                                                                                        | no         |
+| ami_ssm_parameter                    | SSM parameter to get AMI                        | `string`            | `null`                                                                                                                                                                                    | no         |
+| associate_public_ip_address          | Assign public IP automatically                  | `bool`              | `null`                                                                                                                                                                                    | no         |
+| availability_zone                    | Availability zone                               | `string`            | `null`                                                                                                                                                                                    | no         |
+| capacity_reservation_specification   | Capacity reservation specification              | `object`            | `null`                                                                                                                                                                                    | no         |
+| cpu_credits                          | CPU credits mode for T instances                | `string`            | `null`                                                                                                                                                                                    | no         |
+| cpu_options                          | CPU options for the instance                    | `object`            | `null`                                                                                                                                                                                    | no         |
+| create                               | Whether to create the instance                  | `bool`              | `true`                                                                                                                                                                                    | no         |
+| create_custom_policy                 | Create custom IAM policy                        | `bool`              | `false`                                                                                                                                                                                   | no         |
+| create_eip                           | Create Elastic IP                               | `bool`              | `false`                                                                                                                                                                                   | no         |
+| create_iam_instance_profile          | Create IAM Instance Profile                     | `bool`              | `true`                                                                                                                                                                                    | no         |
+| create_key                           | Create SSH key pair                             | `bool`              | `false`                                                                                                                                                                                   | no         |
+| create_private_key                   | Create private key and store it in SSM          | `bool`              | `false`                                                                                                                                                                                   | no         |
+| create_security_group                | Create Security Group                           | `bool`              | `false`                                                                                                                                                                                   | no         |
+| create_spot_instance                 | Create spot instance                            | `bool`              | `false`                                                                                                                                                                                   | no         |
+| custom_policy                        | Custom IAM policy document                      | `string`            | `null`                                                                                                                                                                                    | no         |
+| disable_api_stop                     | Disable stop via API                            | `bool`              | `null`                                                                                                                                                                                    | no         |
+| disable_api_termination              | Disable API termination                         | `bool`              | `null`                                                                                                                                                                                    | no         |
+| ebs_optimized                        | Enable EBS optimization                         | `bool`              | `null`                                                                                                                                                                                    | no         |
+| ebs_volumes                          | Additional EBS volumes                          | `map(object)`       | `null`                                                                                                                                                                                    | no         |
+| eip_domain                           | Domain for EIP                                  | `string`            | `vpc`                                                                                                                                                                                     | no         |
+| eip_tags                             | Tags for EIP                                    | `map(string)`       | `{}`                                                                                                                                                                                      | no         |
+| enable_primary_ipv6                  | Enable primary IPv6                             | `bool`              | `null`                                                                                                                                                                                    | no         |
+| enable_volume_tags                   | Enable volume tags                              | `bool`              | `true`                                                                                                                                                                                    | no         |
+| enclave_options_enabled              | Enable enclave options                          | `bool`              | `null`                                                                                                                                                                                    | no         |
+| ephemeral_block_device               | Ephemeral block device configuration            | `list(object)`      | `null`                                                                                                                                                                                    | no         |
+| get_password_data                    | Get password data                               | `bool`              | `null`                                                                                                                                                                                    | no         |
+| hibernation                          | Enable hibernation                              | `bool`              | `null`                                                                                                                                                                                    | no         |
+| host_id                              | Host ID for dedicated host                      | `string`            | `null`                                                                                                                                                                                    | no         |
+| host_resource_group_arn              | Host resource group ARN                         | `string`            | `null`                                                                                                                                                                                    | no         |
+| iam_instance_profile                 | IAM instance profile name                       | `string`            | `null`                                                                                                                                                                                    | no         |
+| iam_role_description                 | Description for IAM role                        | `string`            | `null`                                                                                                                                                                                    | no         |
+| iam_role_name                        | Name for IAM role                               | `string`            | `null`                                                                                                                                                                                    | no         |
+| iam_role_path                        | Path for IAM role                               | `string`            | `null`                                                                                                                                                                                    | no         |
+| iam_role_permissions_boundary        | Permissions boundary for IAM role               | `string`            | `null`                                                                                                                                                                                    | no         |
+| iam_role_policies                    | IAM policies to attach                          | `map(string)`       | `{SSMCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"}`                                                                                                                      | no         |
+| iam_role_tags                        | Tags for IAM role                               | `map(string)`       | `{}`                                                                                                                                                                                      | no         |
+| iam_role_use_name_prefix             | Use name prefix for IAM role                    | `bool`              | `true`                                                                                                                                                                                    | no         |
+| ignore_ami_changes                   | Ignore AMI changes                              | `bool`              | `true`                                                                                                                                                                                    | no         |
+| instance_initiated_shutdown_behavior | Instance initiated shutdown behavior            | `string`            | `null`                                                                                                                                                                                    | no         |
+| instance_market_options              | Instance market options                         | `object`            | `null`                                                                                                                                                                                    | no         |
+| instance_tags                        | Tags for instance                               | `map(string)`       | `{}`                                                                                                                                                                                      | no         |
+| instance_type                        | Type of EC2 instance                            | `string`            | `t3.micro`                                                                                                                                                                                | no         |
+| ipv6_address_count                   | Number of IPv6 addresses                        | `number`            | `null`                                                                                                                                                                                    | no         |
+| ipv6_addresses                       | List of IPv6 addresses                          | `list(string)`      | `null`                                                                                                                                                                                    | no         |
+| key_name                             | Name of the Key Pair                            | `string`            | `null`                                                                                                                                                                                    | no         |
+| key_name_prefix                      | Prefix for generated key name                   | `string`            | `null`                                                                                                                                                                                    | no         |
+| launch_template                      | Launch template configuration                   | `object`            | `null`                                                                                                                                                                                    | no         |
+| maintenance_options                  | Maintenance options                             | `object`            | `null`                                                                                                                                                                                    | no         |
+| metadata                             | Metadata configuration for naming and tagging   | `any`               | `null`                                                                                                                                                                                    | yes        |
+| metadata_options                     | Instance metadata options                       | `object`            | `{http_endpoint="enabled", http_put_response_hop_limit=1, http_tokens="required"}`                                                                                                        | no         |
+| monitoring                           | Enable detailed monitoring                      | `bool`              | `null`                                                                                                                                                                                    | no         |
+| name                                 | Name of the instance                            | `string`            | `null`                                                                                                                                                                                    | no         |
+| network_interface                    | Network interface configuration                 | `list(object)`      | `null`                                                                                                                                                                                    | no         |
+| owners                               | AMI owners filter                               | `list(string)`      | `["amazon"]`                                                                                                                                                                              | no         |
+| private_dns_name_options             | Private DNS name options                        | `object`            | `null`                                                                                                                                                                                    | no         |
+| private_ip                           | Private IP address                              | `string`            | `null`                                                                                                                                                                                    | no         |
+| private_key_algorithm                | Algorithm for private key                       | `string`            | `RSA`                                                                                                                                                                                     | no         |
+| private_key_rsa_bits                 | RSA key size in bits                            | `number`            | `4096`                                                                                                                                                                                    | no         |
+| public_key                           | Public key material for key pair                | `string`            | `null`                                                                                                                                                                                    | no         |
+| region                               | AWS region                                      | `string`            | `null`                                                                                                                                                                                    | no         |
+| root_block_device                    | Root volume configuration                       | `object`            | `null`                                                                                                                                                                                    | no         |
+| secondary_private_ips                | Secondary private IP addresses                  | `list(string)`      | `null`                                                                                                                                                                                    | no         |
+| security_group_description           | Description for security group                  | `string`            | `null`                                                                                                                                                                                    | no         |
+| security_group_egress_rules          | Egress rules for Security Group                 | `map(object)`       | `{ipv4_default={cidr_ipv4="0.0.0.0/0", description="Allow all IPv4 traffic", ip_protocol="-1"}, ipv6_default={cidr_ipv6="::/0", description="Allow all IPv6 traffic", ip_protocol="-1"}}` | no         |
+| security_group_ingress_rules         | Ingress rules for Security Group                | `map(object)`       | `null`                                                                                                                                                                                    | no         |
+| security_group_name                  | Name for security group                         | `string`            | `null`                                                                                                                                                                                    | no         |
+| security_group_tags                  | Tags for security group                         | `map(string)`       | `{}`                                                                                                                                                                                      | no         |
+| security_group_use_name_prefix       | Use name prefix for security group              | `bool`              | `true`                                                                                                                                                                                    | no         |
+| security_group_vpc_id                | VPC ID for security group                       | `string`            | `null`                                                                                                                                                                                    | no         |
+| source_dest_check                    | Enable source/destination check                 | `bool`              | `null`                                                                                                                                                                                    | no         |
+| spot_instance_interruption_behavior  | Spot instance interruption behavior             | `string`            | `null`                                                                                                                                                                                    | no         |
+| spot_launch_group                    | Spot launch group                               | `string`            | `null`                                                                                                                                                                                    | no         |
+| spot_price                           | Maximum price for spot instance                 | `string`            | `null`                                                                                                                                                                                    | no         |
+| spot_type                            | Type of spot request                            | `string`            | `null`                                                                                                                                                                                    | no         |
+| spot_valid_from                      | Spot request valid from                         | `string`            | `null`                                                                                                                                                                                    | no         |
+| spot_valid_until                     | Spot request valid until                        | `string`            | `null`                                                                                                                                                                                    | no         |
+| spot_wait_for_fulfillment            | Wait for spot fulfillment                       | `bool`              | `null`                                                                                                                                                                                    | no         |
+| subnet_id                            | ID of the subnet where to create the instance   | `string`            | `null`                                                                                                                                                                                    | no         |
+| subnet_name                          | Name of the subnet where to create the instance | `string`            | `null`                                                                                                                                                                                    | no         |
+| tags                                 | Tags for the instance                           | `map(string)`       | `{}`                                                                                                                                                                                      | no         |
+| tenancy                              | Tenancy of the instance                         | `string`            | `null`                                                                                                                                                                                    | no         |
+| timeouts                             | Timeout configuration                           | `object`            | `{}`                                                                                                                                                                                      | no         |
+| user_data                            | Initialization script                           | `string`            | `null`                                                                                                                                                                                    | no         |
+| user_data_base64                     | Initialization script in base64                 | `string`            | `null`                                                                                                                                                                                    | no         |
+| user_data_replace_on_change          | Replace instance on user data change            | `bool`              | `null`                                                                                                                                                                                    | no         |
+| volume_tags                          | Tags for volumes                                | `map(string)`       | `{}`                                                                                                                                                                                      | no         |
+| vpc_name                             | Name of the VPC                                 | `string`            | `null`                                                                                                                                                                                    | no         |
+| vpc_security_group_ids               | List of security group IDs                      | `list(string)`      | `[]`                                                                                                                                                                                      | no         |
 
 
 
