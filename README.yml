@@ -311,8 +311,6 @@ important_notes: |
   - **🔐 Security:** Always use encrypted EBS volumes and restrictive security group rules.
   - **📊 Monitoring:** Enable detailed monitoring for production workloads.
 input_table: |
-  | Name | Description | Type | Default | Required |
-  |------|-------------|------|---------|:--------:|
   | ami | ID of the AMI to use | `string` | `null` | no |
   | ami_filter | Filter to find AMI by name | `map(list(string))` | `{name = ["al2023-ami-*-x86_64"]}` | no |
   | ami_ssm_parameter | SSM parameter to get AMI | `string` | `null` | no |
