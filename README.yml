@@ -12,70 +12,74 @@ module_badges:
     alt: "Terraform Registry"
 quick_start: |
   ```hcl
-  ec2_instance_parameters = {
-    "web-server" = {
-      ami                    = data.aws_ami.amazon_linux.id
-      instance_type          = "t3.medium"
-      availability_zone      = data.aws_availability_zones.available.names[0]
-      subnet_id              = data.aws_subnets.private.ids[0]
+  module "wrapper_ec2_instance" {
+    source = "gocloudLa/wrapper-ec2-instance/aws"
+    
+    metadata = {
+      aws_region     = "us-east-1"
+      environment    = "Production"
+      project        = "Example"
+      public_domain  = "democorp.cloud"
+      private_domain = "democorp"
       
-      # Elastic IP
-      create_eip             = true
-      
-      # Security Group
-      create_security_group = true
-      security_group_ingress_rules = {
-        "http" = {
-          cidr_blocks = ["10.0.0.0/8"]
-          description = "HTTP access"
-          from_port   = 80
-          protocol    = "tcp"
-          to_port     = 80
+      key = {
+        company = "gcl"
+        region  = "use1"
+        env     = "l01"
+        project = "example"
+        layer   = "workload"
+      }
+    }
+    
+    ec2_instance_parameters = {
+      "ExComplete" = {
+        ami_filter = {
+          name = ["al2023-ami-*-x86_64"]
         }
-        "ssh" = {
-          cidr_blocks = ["10.0.0.0/8"]
-          description = "SSH access"
-          from_port   = 22
-          protocol    = "tcp"
-          to_port     = 22
+        instance_type = "t2.small"
+        subnet_name   = "${local.common_name_prefix}-private-us-east-1a"
+        create_eip    = true
+        
+        create_security_group = true
+        security_group_ingress_rules = {
+          "http" = {
+            cidr_ipv4   = "0.0.0.0/0"
+            from_port   = 80
+            ip_protocol = "tcp"
+            to_port     = 80
+          }
         }
-      }
-      
-      # IAM Role
-      create_iam_instance_profile = true
-      iam_role_description        = "IAM role for web server"
-      iam_role_policies = {
-        S3ReadOnly = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
-      }
-      
-      # Storage
-      root_block_device = {
-        encrypted  = true
-        type       = "gp3"
-        size       = 20
-      }
-      
-      ebs_volumes = {
-        "/dev/sdf" = {
-          size       = 100
+        
+        create_key                  = true
+        create_private_key          = true
+        create_custom_policy        = true
+        create_iam_instance_profile = true
+        iam_role_description        = "IAM role for EC2 instance"
+        iam_role_policies = {
+          SSMCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+        }
+        
+        hibernation = true
+        user_data_base64 = base64encode(<<-EOT
+          #!/bin/bash
+          echo "Hello Terraform!"
+        EOT
+        )
+        
+        root_block_device = {
           encrypted  = true
           type       = "gp3"
+          throughput = 200
+          size       = 30
         }
-      }
-      
-      # User Data
-      user_data_base64 = base64encode(<<-EOF
-        #!/bin/bash
-        yum update -y
-        yum install -y httpd
-        systemctl start httpd
-        systemctl enable httpd
-      EOF
-      )
-      
-      tags = {
-        Environment = "production"
-        Application = "web-server"
+        
+        ebs_volumes = {
+          "/dev/sdf" = {
+            size       = 5
+            throughput = 200
+            encrypted  = true
+          }
+        }
       }
     }
   }
@@ -88,25 +92,29 @@ features:
       Deploy standard EC2 instances with complete configuration including CPU, memory, and storage options.
       Supports various instance types from t3.micro to high-performance instances.
     examples:
-      - title: Basic Web Server
+      - title: Simple Instance
         code: |
           ```hcl
           ec2_instance_parameters = {
-            "web-basic" = {
-              ami           = data.aws_ami.amazon_linux.id
-              instance_type = "t3.small"
-              subnet_id     = data.aws_subnets.public.ids[0]
+            "ExSimple" = {
+              # Basic configuration with minimal settings
+              instance_type = "t3.micro"
+              subnet_name   = "${local.common_name_prefix}-private-us-east-1a"
+            }
+          }
+          ```
+      - title: T2 Unlimited Credits
+        code: |
+          ```hcl
+          ec2_instance_parameters = {
+            "exT2Unlimited" = {
+              instance_type               = "t2.micro"
+              cpu_credits                 = "unlimited"
+              subnet_name                 = "${local.common_name_prefix}-private-us-east-1a"
+              associate_public_ip_address = true
               
-              create_eip = true
-              
-              create_security_group = true
-              security_group_ingress_rules = {
-                "http" = {
-                  cidr_blocks = ["10.0.0.0/8"]
-                  from_port   = 80
-                  to_port     = 80
-                  protocol    = "tcp"
-                }
+              maintenance_options = {
+                auto_recovery = "default"
               }
             }
           }
@@ -122,13 +130,52 @@ features:
         code: |
           ```hcl
           ec2_instance_parameters = {
-            "spot-instance" = {
+            "ec2_spot_instance" = {
               create_spot_instance = true
-              spot_price          = "0.05"
-              spot_type           = "persistent"
               
-              instance_type = "m5.large"
-              subnet_id     = data.aws_subnets.private.ids[0]
+              availability_zone     = "use1-az2"
+              subnet_name           = "${local.common_name_prefix}-private-us-east-1a"
+              create_security_group = true
+              security_group_ingress_rules = {
+                "http" = {
+                  cidr_ipv4   = "0.0.0.0/0"
+                  from_port   = 80
+                  ip_protocol = "tcp"
+                  to_port     = 80
+                }
+              }
+              associate_public_ip_address = true
+              
+              # Spot request specific attributes
+              spot_price                = "0.1"
+              spot_wait_for_fulfillment = true
+              spot_type                 = "persistent"
+              
+              user_data_base64 = base64encode(<<-EOT
+                #!/bin/bash
+                echo "Hello Terraform!"
+              EOT
+              )
+              
+              cpu_options = {
+                core_count       = 2
+                threads_per_core = 1
+              }
+              
+              root_block_device = {
+                encrypted  = true
+                type       = "gp3"
+                throughput = 200
+                size       = 50
+              }
+              
+              ebs_volumes = {
+                "/dev/sdf" = {
+                  size       = 5
+                  throughput = 200
+                  encrypted  = true
+                }
+              }
             }
           }
           ```
@@ -143,20 +190,24 @@ features:
         code: |
           ```hcl
           ec2_instance_parameters = {
-            "secure-instance" = {
-              create_iam_instance_profile = true
-              iam_role_policies = {
-                SSMCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
-              }
-              
+            "ExComplete" = {
               create_security_group = true
               security_group_ingress_rules = {
-                "ssh" = {
-                  cidr_blocks = ["10.0.0.0/8"]
-                  from_port   = 22
-                  to_port     = 22
-                  protocol    = "tcp"
+                "http" = {
+                  cidr_ipv4   = "0.0.0.0/0"
+                  from_port   = 80
+                  ip_protocol = "tcp"
+                  to_port     = 80
                 }
+              }
+              
+              create_key                  = true
+              create_private_key          = true
+              create_custom_policy        = true
+              create_iam_instance_profile = true
+              iam_role_description        = "IAM role for EC2 instance"
+              iam_role_policies = {
+                SSMCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
               }
             }
           }
@@ -172,22 +223,26 @@ features:
         code: |
           ```hcl
           ec2_instance_parameters = {
-            "storage-optimized" = {
+            "ExComplete" = {
+              enable_volume_tags = false
               root_block_device = {
                 encrypted  = true
                 type       = "gp3"
-                size       = 50
-                throughput = 250
-                iops       = 3000
+                throughput = 200
+                size       = 30
+                tags = {
+                  Name = "my-root-block"
+                }
               }
               
               ebs_volumes = {
                 "/dev/sdf" = {
-                  size       = 500
-                  type       = "gp3"
+                  size       = 5
+                  throughput = 200
                   encrypted  = true
-                  throughput = 500
-                  iops       = 4000
+                  tags = {
+                    MountPoint = "/mnt/data"
+                  }
                 }
               }
             }
@@ -204,11 +259,10 @@ features:
         code: |
           ```hcl
           ec2_instance_parameters = {
-            "web-server" = {
-              create_ssh_key         = true
-              create_private_key     = true
-              private_key_algorithm  = "RSA"
-              private_key_rsa_bits   = 4096
+            "ExComplete" = {
+              create_key         = true
+              create_private_key = true
+              # Private key will be stored in SSM Parameter Store
             }
           }
           ```
@@ -222,19 +276,31 @@ features:
       - title: Custom Policy Configuration
         code: |
           ```hcl
+          # Define custom policy in data source
+          data "aws_iam_policy_document" "example_policy" {
+            statement {
+              sid    = "ListBuckets"
+              effect = "Allow"
+              actions   = ["s3:ListAllMyBuckets"]
+              resources = ["*"]
+            }
+            
+            statement {
+              effect = "Allow"
+              actions = [
+                "s3:ListBucket",
+                "s3:GetBucketLocation"
+              ]
+              resources = ["arn:aws:s3:::/example"]
+            }
+          }
+          
+          # Use in EC2 instance configuration
           ec2_instance_parameters = {
-            "app-server" = {
-              create_custom_policy = true
-              custom_policy = jsonencode({
-                Version = "2012-10-17"
-                Statement = [
-                  {
-                    Effect = "Allow"
-                    Action = ["s3:GetObject", "s3:PutObject"]
-                    Resource = "arn:aws:s3:::my-bucket/*"
-                  }
-                ]
-              })
+            "ExComplete" = {
+              create_custom_policy        = true
+              create_iam_instance_profile = true
+              custom_policy               = data.aws_iam_policy_document.example_policy
             }
           }
           ```
@@ -248,7 +314,8 @@ input_table: |
   | Name | Description | Type | Default | Required |
   |------|-------------|------|---------|:--------:|
   | ami | ID of the AMI to use | `string` | `null` | no |
-  | ami_ssm_parameter | SSM parameter to get AMI | `string` | `/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64` | no |
+  | ami_filter | Filter to find AMI by name | `map(list(string))` | `{name = ["al2023-ami-*-x86_64"]}` | no |
+  | ami_ssm_parameter | SSM parameter to get AMI | `string` | `null` | no |
   | associate_public_ip_address | Assign public IP automatically | `bool` | `null` | no |
   | availability_zone | Availability zone | `string` | `null` | no |
   | capacity_reservation_specification | Capacity reservation specification | `object` | `null` | no |
@@ -257,12 +324,12 @@ input_table: |
   | create | Whether to create the instance | `bool` | `true` | no |
   | create_custom_policy | Create custom IAM policy | `bool` | `false` | no |
   | create_eip | Create Elastic IP | `bool` | `false` | no |
-  | create_iam_instance_profile | Create IAM Instance Profile | `bool` | `false` | no |
+  | create_iam_instance_profile | Create IAM Instance Profile | `bool` | `true` | no |
+  | create_key | Create SSH key pair | `bool` | `false` | no |
   | create_private_key | Create private key and store it in SSM | `bool` | `false` | no |
-  | create_security_group | Create Security Group | `bool` | `true` | no |
+  | create_security_group | Create Security Group | `bool` | `false` | no |
   | create_spot_instance | Create spot instance | `bool` | `false` | no |
-  | create_ssh_key | Create SSH key pair | `bool` | `false` | no |
-  | custom_policy | Custom IAM policy JSON | `string` | `null` | no |
+  | custom_policy | Custom IAM policy document | `string` | `null` | no |
   | disable_api_stop | Disable stop via API | `bool` | `null` | no |
   | disable_api_termination | Disable API termination | `bool` | `null` | no |
   | ebs_optimized | Enable EBS optimization | `bool` | `null` | no |
@@ -282,10 +349,10 @@ input_table: |
   | iam_role_name | Name for IAM role | `string` | `null` | no |
   | iam_role_path | Path for IAM role | `string` | `null` | no |
   | iam_role_permissions_boundary | Permissions boundary for IAM role | `string` | `null` | no |
-  | iam_role_policies | IAM policies to attach | `map(string)` | `{}` | no |
+  | iam_role_policies | IAM policies to attach | `map(string)` | `{SSMCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"}` | no |
   | iam_role_tags | Tags for IAM role | `map(string)` | `{}` | no |
   | iam_role_use_name_prefix | Use name prefix for IAM role | `bool` | `true` | no |
-  | ignore_ami_changes | Ignore AMI changes | `bool` | `false` | no |
+  | ignore_ami_changes | Ignore AMI changes | `bool` | `true` | no |
   | instance_initiated_shutdown_behavior | Instance initiated shutdown behavior | `string` | `null` | no |
   | instance_market_options | Instance market options | `object` | `null` | no |
   | instance_tags | Tags for instance | `map(string)` | `{}` | no |
@@ -296,10 +363,12 @@ input_table: |
   | key_name_prefix | Prefix for generated key name | `string` | `null` | no |
   | launch_template | Launch template configuration | `object` | `null` | no |
   | maintenance_options | Maintenance options | `object` | `null` | no |
+  | metadata | Metadata configuration for naming and tagging | `any` | `null` | yes |
   | metadata_options | Instance metadata options | `object` | `{http_endpoint="enabled", http_put_response_hop_limit=1, http_tokens="required"}` | no |
   | monitoring | Enable detailed monitoring | `bool` | `null` | no |
   | name | Name of the instance | `string` | `null` | no |
   | network_interface | Network interface configuration | `list(object)` | `null` | no |
+  | owners | AMI owners filter | `list(string)` | `["amazon"]` | no |
   | private_dns_name_options | Private DNS name options | `object` | `null` | no |
   | private_ip | Private IP address | `string` | `null` | no |
   | private_key_algorithm | Algorithm for private key | `string` | `RSA` | no |
@@ -324,6 +393,7 @@ input_table: |
   | spot_valid_until | Spot request valid until | `string` | `null` | no |
   | spot_wait_for_fulfillment | Wait for spot fulfillment | `bool` | `null` | no |
   | subnet_id | ID of the subnet where to create the instance | `string` | `null` | no |
+  | subnet_name | Name of the subnet where to create the instance | `string` | `null` | no |
   | tags | Tags for the instance | `map(string)` | `{}` | no |
   | tenancy | Tenancy of the instance | `string` | `null` | no |
   | timeouts | Timeout configuration | `object` | `{}` | no |
@@ -331,4 +401,5 @@ input_table: |
   | user_data_base64 | Initialization script in base64 | `string` | `null` | no |
   | user_data_replace_on_change | Replace instance on user data change | `bool` | `null` | no |
   | volume_tags | Tags for volumes | `map(string)` | `{}` | no |
+  | vpc_name | Name of the VPC | `string` | `null` | no |
   | vpc_security_group_ids | List of security group IDs | `list(string)` | `[]` | no |
