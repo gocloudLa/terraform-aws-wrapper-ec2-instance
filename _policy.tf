@@ -5,7 +5,7 @@ locals {
       "${ec2_instance_key}" = {
         create        = try(ec2_instance_config.create_custom_policy, false)
         custom_policy = try(ec2_instance_config.custom_policy, "")
-        tags          = merge(lookup(ec2_instance_config, "tags", local.common_tags), { Name = "${local.common_name}-${ec2_instance_key}-policy" })
+        tags          = merge(lookup(ec2_instance_config, "tags", local.default_common_tags), { Name = "${local.common_name}-${ec2_instance_key}-policy" })
       }
     } if try(ec2_instance_config.create_custom_policy, false)
   ]

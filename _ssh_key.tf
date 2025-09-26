@@ -10,7 +10,7 @@ locals {
         private_key_algorithm = try(ec2_instance_config.private_key_algorithm, "RSA")
         private_key_rsa_bits  = try(ec2_instance_config.private_key_rsa_bits, 4096)
         public_key            = sensitive(try(ec2_instance_config.public_key, ""))
-        tags                  = merge(lookup(ec2_instance_config, "tags", local.common_tags), { Name = "${local.common_name}-${ec2_instance_key}-key" })
+        tags                  = merge(lookup(ec2_instance_config, "tags", local.default_common_tags), { Name = "${local.common_name}-${ec2_instance_key}-key" })
       }
     } if try(ec2_instance_config.create_key, false)
   ]
