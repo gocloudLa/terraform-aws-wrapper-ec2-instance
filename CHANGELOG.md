@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/gocloudLa/terraform-aws-wrapper-ec2-instance/compare/v0.1.0...v0.1.1) (2025-11-06)
+
+
+### Bug Fixes
+
+* update main.tf wrapper variables ([#4](https://github.com/gocloudLa/terraform-aws-wrapper-ec2-instance/issues/4)) ([6efbb72](https://github.com/gocloudLa/terraform-aws-wrapper-ec2-instance/commit/6efbb72cc3f8bb280f1828f938208ab95def2e82))
+
 ## 0.1.0 (2025-10-30)
 
 
