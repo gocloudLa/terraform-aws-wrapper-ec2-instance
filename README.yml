@@ -185,6 +185,7 @@ features:
     long_description: |
       Create and manage Security Groups with customizable rules and IAM Instance Profiles with granular access policies.
       Supports both custom security groups and existing ones, with comprehensive IAM role management.
+      When `create_security_group = true`, the created security group is automatically used by the instance. When `create_security_group = false` and `vpc_security_group_ids` is not provided, the default VPC security group is used.
     examples:
       - title: Security Configuration
         code: |
@@ -254,6 +255,7 @@ features:
     long_description: |
       Automatically create SSH key pairs for EC2 instances with secure private key storage in AWS Systems Manager Parameter Store.
       Supports RSA and ED25519 algorithms with configurable key sizes and automatic key rotation.
+      When `create_key = true`, the created key pair is automatically used by the instance. To use an existing key pair, set `key_name` directly without setting `create_key`.
     examples:
       - title: SSH Key Configuration
         code: |
@@ -262,7 +264,18 @@ features:
             "ExComplete" = {
               create_key         = true
               create_private_key = true
-              # Private key will be stored in SSM Parameter Store
+              # Private key will be stored in SSM Parameter Store at /KEY_PAIR/{common_name}-{instance_key}
+              # The key is automatically used by the instance
+            }
+          }
+          ```
+      - title: Use Existing SSH Key
+        code: |
+          ```hcl
+          ec2_instance_parameters = {
+            "ExComplete" = {
+              key_name = "my-existing-key-pair"
+              # Do not set create_key when using an existing key
             }
           }
           ```
@@ -400,4 +413,4 @@ input_table: |
   | user_data_replace_on_change | Replace instance on user data change | `bool` | `null` | no |
   | volume_tags | Tags for volumes | `map(string)` | `{}` | no |
   | vpc_name | Name of the VPC | `string` | `null` | no |
-  | vpc_security_group_ids | List of security group IDs | `list(string)` | `[]` | no |
+  | vpc_security_group_ids | List of security group IDs. When `create_security_group = true` and not provided, defaults to `[]` (uses created security group). When `create_security_group = false` and not provided, defaults to default VPC security group. | `list(string)` | `[]` (when creating security group) or default VPC security group (when not creating) | no |
