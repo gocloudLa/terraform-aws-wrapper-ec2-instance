@@ -4,19 +4,19 @@ module "wrapper_ec2_instance" {
   metadata = local.metadata
 
   ec2_instance_parameters = {
-    "ExSimple" = {
-      ## ubuntu AMI
-      # ami           = "ami-0360c520857e3138f"
-      # ami_filter    = { name = ["ubuntu/images/hvm-ssd-gp3/ubuntu-noble-*"]}
+    # "ExSimple" = {
+    #   # ubuntu AMI
+    #   ami           = "ami-0360c520857e3138f"
+    #   ami_filter    = { name = ["ubuntu/images/hvm-ssd-gp3/ubuntu-noble-*"]}
 
-      # instance_type = "t3.micro"
+    #   instance_type = "t3.micro"
 
-      # vpc_id        = "vpc-XXXXXXXXXXXXXXXXX"
+    #   vpc_id        = "vpc-XXXXXXXXXXXXXXXXX"
 
-      # vpc_name      = "${local.common_name_prefix}"
-      # subnet_id     = "subnet-XXXXXXXXXXXXXXXXX"
-      # subnet_name   = "${local.common_name_prefix}-private-us-east-1a"
-    }
+    #   vpc_name      = "${local.common_name_prefix}"
+    #   subnet_id     = "subnet-XXXXXXXXXXXXXXXXX"
+    #   subnet_name   = "${local.common_name_prefix}-private-us-east-1a"
+    # }
     # "ExComplete" = {
 
     #   # name = "example"
@@ -46,6 +46,7 @@ module "wrapper_ec2_instance" {
     #     #   to_port     = 22
     #     # }
     #   }
+    #   # vpc_security_group_ids = ["sg-xxxxxxxxxxxxxxxxx"]
 
     #   create_key                  = true
     #   create_private_key          = true
