@@ -98,7 +98,11 @@ module "ec2_instance" {
   user_data_base64                    = try(each.value.user_data_base64, var.ec2_instance_defaults.user_data_base64, null)
   user_data_replace_on_change         = try(each.value.user_data_replace_on_change, var.ec2_instance_defaults.user_data_replace_on_change, null)
   volume_tags                         = try(each.value.volume_tags, var.ec2_instance_defaults.volume_tags, merge(local.default_common_tags, try(each.value.tags, var.ec2_instance_defaults, null)))
-  vpc_security_group_ids              = try(each.value.vpc_security_group_ids, var.ec2_instance_defaults.vpc_security_group_ids, [data.aws_security_group.default[each.key].id])
+  vpc_security_group_ids = try(
+    each.value.vpc_security_group_ids,
+    var.ec2_instance_defaults.vpc_security_group_ids,
+    try(each.value.create_security_group, var.ec2_instance_defaults.create_security_group, false) ? [] : [data.aws_security_group.default[each.key].id]
+  )
 
   tags = merge(local.default_common_tags, try(each.value.tags, var.ec2_instance_defaults, null))
 }
