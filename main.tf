@@ -1,7 +1,7 @@
 module "ec2_instance" {
   for_each = var.ec2_instance_parameters
   source   = "terraform-aws-modules/ec2-instance/aws"
-  version  = "6.1.1"
+  version  = "6.1.4"
 
   ami                                = try(each.value.ami, var.ec2_instance_defaults.ami, data.aws_ami.ami_id[each.key].id)
   ami_ssm_parameter                  = try(each.value.ami_ssm_parameter, var.ec2_instance_defaults.ami_ssm_parameter, null)
