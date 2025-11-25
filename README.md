@@ -38,7 +38,7 @@ module "wrapper_ec2_instance" {
   source = "gocloudLa/wrapper-ec2-instance/aws"
   
   metadata = {
-    aws_region     = "us-east-1"
+    aws_region     = "us-east-2"
     environment    = "Production"
     project        = "Example"
     public_domain  = "democorp.cloud"
@@ -46,7 +46,7 @@ module "wrapper_ec2_instance" {
     
     key = {
       company = "gcl"
-      region  = "use1"
+      region  = "use2"
       env     = "l01"
       project = "example"
       layer   = "workload"
