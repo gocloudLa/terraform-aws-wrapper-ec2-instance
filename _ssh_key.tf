@@ -16,7 +16,7 @@ locals {
 
 module "key-pair" {
   source  = "terraform-aws-modules/key-pair/aws"
-  version = "2.1.0"
+  version = "2.1.1"
 
   for_each = local.ssh_key_parameters
 

@@ -27,8 +27,8 @@ The Terraform wrapper for AWS EC2 Instance simplifies the management and deploym
 ### 🔗 External Modules
 | Name | Version |
 |------|------:|
-| <a href="https://github.com/terraform-aws-modules/terraform-aws-ec2-instance" target="_blank">terraform-aws-modules/ec2-instance/aws</a> | 6.1.1 |
-| <a href="https://github.com/terraform-aws-modules/terraform-aws-key-pair" target="_blank">terraform-aws-modules/key-pair/aws</a> | 2.1.0 |
+| <a href="https://github.com/terraform-aws-modules/terraform-aws-ec2-instance" target="_blank">terraform-aws-modules/ec2-instance/aws</a> | 6.1.4 |
+| <a href="https://github.com/terraform-aws-modules/terraform-aws-key-pair" target="_blank">terraform-aws-modules/key-pair/aws</a> | 2.1.1 |
 
 
 
