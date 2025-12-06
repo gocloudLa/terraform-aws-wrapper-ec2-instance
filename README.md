@@ -39,7 +39,7 @@ module "wrapper_ec2_instance" {
   
   metadata = {
     aws_region     = "us-east-2"
-    environment    = "Production"
+    environment    = "Laboratory"
     project        = "Example"
     public_domain  = "democorp.cloud"
     private_domain = "democorp"
