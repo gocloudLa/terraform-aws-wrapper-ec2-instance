@@ -32,12 +32,12 @@ data "aws_subnet" "this" {
 
 
 data "aws_security_group" "default" {
-  for_each = var.ec2_instance_parameters
+  count = local.enable_security_group
 
   vpc_id = data.aws_vpc.this[each.key].id
 
   tags = {
-    Name = try(each.value.security_group_name, local.default_security_group)
+    Name = local.default_security_group
   }
 }
 
