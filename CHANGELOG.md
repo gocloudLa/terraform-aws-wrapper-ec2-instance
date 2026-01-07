@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/gocloudLa/terraform-aws-wrapper-ec2-instance/compare/v0.1.1...v0.1.2) (2026-01-07)
+
+
+### Bug Fixes
+
+* **module:** add condition merge tags in ssh ([#7](https://github.com/gocloudLa/terraform-aws-wrapper-ec2-instance/issues/7)) ([54682f7](https://github.com/gocloudLa/terraform-aws-wrapper-ec2-instance/commit/54682f73dcabaa1fa0df9f3f4562efc3207c7ec4))
+
 ## [0.1.1](https://github.com/gocloudLa/terraform-aws-wrapper-ec2-instance/compare/v0.1.0...v0.1.1) (2025-11-06)
 
 
