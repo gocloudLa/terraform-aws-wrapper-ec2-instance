@@ -25,7 +25,11 @@ data "aws_subnets" "this" {
 }
 
 data "aws_subnet" "this" {
-  for_each = data.aws_subnets.this
+  for_each = {
+    for service, value in var.ec2_instance_parameters :
+    servive => value
+    if try(value.availability_zone, var.ec2_instance_defaults.availability_zone, null) == null
+  }
 
   id = data.aws_subnets.this[each.key].ids[0]
 }
