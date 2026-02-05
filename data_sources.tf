@@ -27,7 +27,7 @@ data "aws_subnets" "this" {
 data "aws_subnet" "this" {
   for_each = {
     for service, value in var.ec2_instance_parameters :
-    servive => value
+    service => value
     if try(value.availability_zone, var.ec2_instance_defaults.availability_zone, null) == null
   }
 
