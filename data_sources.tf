@@ -26,8 +26,8 @@ data "aws_subnets" "this" {
 
 data "aws_subnet" "this" {
   for_each = var.ec2_instance_parameters
-  
-  id       = data.aws_subnets.this[each.key].ids[0]
+
+  id = data.aws_subnets.this[each.key].ids[0]
 }
 
 
