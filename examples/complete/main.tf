@@ -12,8 +12,9 @@ module "wrapper_ec2_instance" {
     #   instance_type = "t3.micro"
 
     #   vpc_id        = "vpc-XXXXXXXXXXXXXXXXX"
-
     #   vpc_name      = "${local.common_name_prefix}"
+    
+    #   # Availability Zone is determined by the selected subnet
     #   subnet_id     = "subnet-XXXXXXXXXXXXXXXXX"
     #   subnet_name   = "${local.common_name_prefix}-private-us-east-1a"
     # }
