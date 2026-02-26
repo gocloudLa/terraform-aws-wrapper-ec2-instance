@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.3](https://github.com/gocloudLa/terraform-aws-wrapper-ec2-instance/compare/v0.1.2...v0.1.3) (2026-02-09)
+
+
+### Bug Fixes
+
+* **data:** add condition to subnet datasource ([#9](https://github.com/gocloudLa/terraform-aws-wrapper-ec2-instance/issues/9)) ([dfe0961](https://github.com/gocloudLa/terraform-aws-wrapper-ec2-instance/commit/dfe0961fd943b077bd1be90504a58921145ca1da))
+
+## [0.1.2](https://github.com/gocloudLa/terraform-aws-wrapper-ec2-instance/compare/v0.1.1...v0.1.2) (2026-01-07)
+
+
+### Bug Fixes
+
+* **module:** add condition merge tags in ssh ([#7](https://github.com/gocloudLa/terraform-aws-wrapper-ec2-instance/issues/7)) ([54682f7](https://github.com/gocloudLa/terraform-aws-wrapper-ec2-instance/commit/54682f73dcabaa1fa0df9f3f4562efc3207c7ec4))
+
 ## [0.1.1](https://github.com/gocloudLa/terraform-aws-wrapper-ec2-instance/compare/v0.1.0...v0.1.1) (2025-11-06)
 
 

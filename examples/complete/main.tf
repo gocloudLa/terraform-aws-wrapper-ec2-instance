@@ -12,8 +12,9 @@ module "wrapper_ec2_instance" {
     #   instance_type = "t3.micro"
 
     #   vpc_id        = "vpc-XXXXXXXXXXXXXXXXX"
-
     #   vpc_name      = "${local.common_name_prefix}"
+
+    #   # Availability Zone is determined by the selected subnet
     #   subnet_id     = "subnet-XXXXXXXXXXXXXXXXX"
     #   subnet_name   = "${local.common_name_prefix}-private-us-east-1a"
     # }
@@ -26,7 +27,6 @@ module "wrapper_ec2_instance" {
     #     name = ["al2023-ami-*-x86_64"]
     #   }
     #   instance_type = "t2.small" # used to set core count below
-    #   # availability_zone = data.aws_availability_zones.available.names[1]
     #   subnet_name      = "${local.common_name_prefix}-private-us-east-1a"
     #   create_eip       = true
     #   disable_api_stop = false
@@ -109,7 +109,6 @@ module "wrapper_ec2_instance" {
 
     #   create_spot_instance = true
 
-    #   availability_zone     = "use1-az2"
     #   subnet_name           = "${local.common_name_prefix}-private-us-east-1a"
     #   create_security_group = true
     #   security_group_ingress_rules = {
