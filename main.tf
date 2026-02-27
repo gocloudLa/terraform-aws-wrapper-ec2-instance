@@ -3,8 +3,10 @@ module "ec2_instance" {
   source   = "terraform-aws-modules/ec2-instance/aws"
   version  = "6.2.0"
 
+#"/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64"
+
   ami                                = try(each.value.ami, var.ec2_instance_defaults.ami, data.aws_ami.ami_id[each.key].id)
-  ami_ssm_parameter                  = try(each.value.ami_ssm_parameter, var.ec2_instance_defaults.ami_ssm_parameter, null)
+  ami_ssm_parameter                  = try(each.value.ami_ssm_parameter, var.ec2_instance_defaults.ami_ssm_parameter, "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64")
   associate_public_ip_address        = try(each.value.associate_public_ip_address, var.ec2_instance_defaults.associate_public_ip_address, null)
   availability_zone                  = data.aws_subnet.this[each.key].availability_zone
   capacity_reservation_specification = try(each.value.capacity_reservation_specification, var.ec2_instance_defaults.capacity_reservation_specification, null)
