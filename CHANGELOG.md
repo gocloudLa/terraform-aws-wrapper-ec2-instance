@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.4](https://github.com/gocloudLa/terraform-aws-wrapper-ec2-instance/compare/v0.1.3...v0.1.4) (2026-03-03)
+
+
+### Bug Fixes
+
+* **deps:** bump the all-terraform-dependencies group across 1 directory with 2 updates ([#12](https://github.com/gocloudLa/terraform-aws-wrapper-ec2-instance/issues/12)) ([f706de4](https://github.com/gocloudLa/terraform-aws-wrapper-ec2-instance/commit/f706de4cb6c63ac49abf2f93d202bda0591f5883))
+
 ## [0.1.3](https://github.com/gocloudLa/terraform-aws-wrapper-ec2-instance/compare/v0.1.2...v0.1.3) (2026-02-09)
 
 
