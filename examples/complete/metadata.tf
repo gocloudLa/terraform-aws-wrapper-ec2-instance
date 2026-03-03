@@ -8,9 +8,9 @@ locals {
     private_domain = "democorp"
 
     key = {
-      company = "gcl"
+      company = "dmc"
       region  = "use2"
-      env     = "l01"
+      env     = "lab"
       project = "example"
       layer   = "workload"
     }
