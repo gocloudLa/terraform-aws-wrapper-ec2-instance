@@ -93,7 +93,7 @@ module "ec2_instance" {
   spot_wait_for_fulfillment           = try(each.value.spot_wait_for_fulfillment, var.ec2_instance_defaults.spot_wait_for_fulfillment, null)
   subnet_id                           = try(each.value.subnet_id, var.ec2_instance_defaults.subnet_id, data.aws_subnets.this[each.key].ids[0])
   tenancy                             = try(each.value.tenancy, var.ec2_instance_defaults.tenancy, null)
-  timeouts                            = try(each.value.timeouts, var.ec2_instance_defaults.timeouts, {})
+  timeouts                            = try(each.value.timeouts, var.ec2_instance_defaults.timeouts, null)
   user_data                           = try(each.value.user_data, var.ec2_instance_defaults.user_data, null)
   user_data_base64                    = try(each.value.user_data_base64, var.ec2_instance_defaults.user_data_base64, null)
   user_data_replace_on_change         = try(each.value.user_data_replace_on_change, var.ec2_instance_defaults.user_data_replace_on_change, null)

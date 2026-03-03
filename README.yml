@@ -405,7 +405,7 @@ input_table: |
   | subnet_name | Name of the subnet where to create the instance | `string` | `null` | no |
   | tags | Tags for the instance | `map(string)` | `{}` | no |
   | tenancy | Tenancy of the instance | `string` | `null` | no |
-  | timeouts | Timeout configuration | `object` | `{}` | no |
+  | timeouts | Timeout configuration | `object` | `null` | no |
   | user_data | Initialization script | `string` | `null` | no |
   | user_data_base64 | Initialization script in base64 | `string` | `null` | no |
   | user_data_replace_on_change | Replace instance on user data change | `bool` | `null` | no |
