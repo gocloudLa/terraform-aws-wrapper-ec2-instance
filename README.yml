@@ -325,7 +325,7 @@ important_notes: |
 input_table: |
   | ami | ID of the AMI to use | `string` | `null` | no |
   | ami_filter | Filter to find AMI by name | `map(list(string))` | `{name = ["al2023-ami-*-x86_64"]}` | no |
-  | ami_ssm_parameter | SSM parameter to get AMI | `string` | `null` | no |
+  | ami_ssm_parameter | SSM parameter to get AMI | `string` | `/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64` | no |
   | associate_public_ip_address | Assign public IP automatically | `bool` | `null` | no |
   | capacity_reservation_specification | Capacity reservation specification | `object` | `null` | no |
   | cpu_credits | CPU credits mode for T instances | `string` | `null` | no |
