@@ -1,10 +1,10 @@
 module "ec2_instance" {
   for_each = var.ec2_instance_parameters
   source   = "terraform-aws-modules/ec2-instance/aws"
-  version  = "6.1.1"
+  version  = "6.3.0"
 
   ami                                = try(each.value.ami, var.ec2_instance_defaults.ami, data.aws_ami.ami_id[each.key].id)
-  ami_ssm_parameter                  = try(each.value.ami_ssm_parameter, var.ec2_instance_defaults.ami_ssm_parameter, null)
+  ami_ssm_parameter                  = try(each.value.ami_ssm_parameter, var.ec2_instance_defaults.ami_ssm_parameter, "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64")
   associate_public_ip_address        = try(each.value.associate_public_ip_address, var.ec2_instance_defaults.associate_public_ip_address, null)
   availability_zone                  = data.aws_subnet.this[each.key].availability_zone
   capacity_reservation_specification = try(each.value.capacity_reservation_specification, var.ec2_instance_defaults.capacity_reservation_specification, null)
@@ -93,7 +93,7 @@ module "ec2_instance" {
   spot_wait_for_fulfillment           = try(each.value.spot_wait_for_fulfillment, var.ec2_instance_defaults.spot_wait_for_fulfillment, null)
   subnet_id                           = try(each.value.subnet_id, var.ec2_instance_defaults.subnet_id, data.aws_subnets.this[each.key].ids[0])
   tenancy                             = try(each.value.tenancy, var.ec2_instance_defaults.tenancy, null)
-  timeouts                            = try(each.value.timeouts, var.ec2_instance_defaults.timeouts, {})
+  timeouts                            = try(each.value.timeouts, var.ec2_instance_defaults.timeouts, null)
   user_data                           = try(each.value.user_data, var.ec2_instance_defaults.user_data, null)
   user_data_base64                    = try(each.value.user_data_base64, var.ec2_instance_defaults.user_data_base64, null)
   user_data_replace_on_change         = try(each.value.user_data_replace_on_change, var.ec2_instance_defaults.user_data_replace_on_change, null)
