@@ -8,12 +8,12 @@ locals {
         for alb_key, alb_values in try(port_values.load_balancer, {}) :
         {
           "${instance_name}-${port_key}-${alb_key}" = {
-            "alb_name"       = alb_values.alb_name
-            "instance_name"  = instance_name
-            "name"           = "${local.common_name}-${instance_name}-${port_values.instance_port}-${alb_key}"
-            "port_key"       = port_key
-            "port_values"    = port_values
-            "alb_values"     = alb_values
+            "alb_name"      = alb_values.alb_name
+            "instance_name" = instance_name
+            "name"          = "${local.common_name}-${instance_name}-${port_values.instance_port}-${alb_key}"
+            "port_key"      = port_key
+            "port_values"   = port_values
+            "alb_values"    = alb_values
           }
         } if try(alb_values.target_group_attach, null) == null
       ] if can(port_values.load_balancer)
@@ -95,9 +95,9 @@ locals {
   load_balancer_calculated = {
     for instance_name, instance_config in local.load_balancer_calculated_tmp2 :
     instance_name => merge([
-        for port_list in instance_config : {
-          for rule_config in port_list : rule_config.custom_key => rule_config
-        }
+      for port_list in instance_config : {
+        for rule_config in port_list : rule_config.custom_key => rule_config
+      }
     ]...)
   }
 }

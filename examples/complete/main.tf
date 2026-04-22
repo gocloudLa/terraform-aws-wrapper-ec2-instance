@@ -184,8 +184,8 @@ module "wrapper_ec2_instance" {
               }
               listener_rules = {
                 "rule1" = {
-                  priority          = 10
-                  actions = [{ type = "forward" }] # Default Action
+                  priority = 10
+                  actions  = [{ type = "forward" }] # Default Action
                   conditions = [
                     {
                       host_headers = ["ExAlb.${local.zone_public}"]
@@ -195,7 +195,7 @@ module "wrapper_ec2_instance" {
                 # REDIRECT
                 # curl -v -H 'Host: ExAlb-redirect.democorp.cloud' https://{balancer_domain}
                 "rule2" = {
-                  priority          = 20
+                  priority = 20
                   actions = [{
                     type        = "redirect"
                     host        = "google.com"
@@ -211,7 +211,7 @@ module "wrapper_ec2_instance" {
                 # # FIXED RESPONSE
                 # # curl -v -H 'Host: ExAlb-fixed.democorp.cloud' https://{balancer_domain}
                 "rule3" = {
-                  priority          = 30
+                  priority = 30
                   actions = [{
                     type         = "fixed-response"
                     message_body = "Unauthorized - Fixed Response"
@@ -232,7 +232,7 @@ module "wrapper_ec2_instance" {
           instance_port = 6001
           load_balancer = {
             "alb1" = {
-              alb_name = "${local.common_name}-internal-00"
+              alb_name             = "${local.common_name}-internal-00"
               alb_listener_port    = 80
               deregistration_delay = 300
               slow_start           = 30
@@ -249,7 +249,7 @@ module "wrapper_ec2_instance" {
               }
               listener_rules = {
                 "rule1" = {
-                  priority          = 10
+                  priority = 10
                   conditions = [
                     {
                       host_headers = ["ExAlb-socket.${local.zone_public}"]
