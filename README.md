@@ -22,6 +22,8 @@ The Terraform wrapper for AWS EC2 Instance simplifies the management and deploym
 
 - 📋 [Custom IAM Policies](#custom-iam-policies) - Supports custom IAM policies for instances with automatic role attachment
 
+- ⚖️ [Load Balancer Integration](#load-balancer-integration) - Integrates EC2 instances with ALB/NLB including target groups, listener rules and attachments
+
 
 
 ### 🔗 External Modules
@@ -360,6 +362,66 @@ ec2_instance_parameters = {
     create_iam_instance_profile = true
     custom_policy               = data.aws_iam_policy_document.example_policy
   }
+}
+```
+
+
+</details>
+
+
+### Load Balancer Integration
+Provides full integration between EC2 instances and AWS Load Balancers.
+The module can automatically create target groups, configure listener rules, and register instances to those target groups based on the instance in specific ports.
+
+
+<details><summary>Load Balancer configuration</summary>
+
+```hcl
+ec2_instance_parameters = {
+   "ExAlb" = {
+      ami_filter    = { name = ["ubuntu/images/hvm-ssd-gp3/ubuntu-noble-*"] }
+      instance_type = "t3.micro"
+
+      vpc_name    = "${local.common_name_prefix}"
+      subnet_name = "${local.common_name_prefix}-private-us-east-2a"
+
+      ports = {
+        "port1" = {
+          instance_port = 80
+          load_balancer = {
+            "alb1" = {
+              alb_name = "${local.common_name}-internal-00"
+              # target_group_custom_name = "custom-name" # Default: "${local.common_name}-${instance_name}-${port_values.instance_port}-${alb_key}"
+              alb_listener_port    = 443
+              deregistration_delay = 300
+              slow_start           = 30
+              health_check = {
+                # # Default Values
+                # path                = "/"
+                # port                = "traffic-port"
+                # protocol            = "HTTP"
+                # matcher             = 200
+                # interval            = 30
+                # timeout             = 5
+                # healthy_threshold   = 3
+                # unhealthy_threshold = 3
+              }
+              listener_rules = {
+                "rule1" = {
+                  priority          = 10
+                  actions = [{ type = "forward" }] # Default Action
+                  conditions = [
+                    {
+                      host_headers = ["ExAlb.${local.zone_public}"]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
 }
 ```
 
