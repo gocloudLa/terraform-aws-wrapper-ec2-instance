@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/gocloudLa/terraform-aws-wrapper-ec2-instance/compare/v0.1.4...v0.2.0) (2026-05-02)
+
+
+### Features
+
+* **module:** update examples, readme & add loadbalancer integration ([#15](https://github.com/gocloudLa/terraform-aws-wrapper-ec2-instance/issues/15)) ([5f3ad15](https://github.com/gocloudLa/terraform-aws-wrapper-ec2-instance/commit/5f3ad1556da092392a1db12b6f6f8f7065351507))
+
 ## [0.1.4](https://github.com/gocloudLa/terraform-aws-wrapper-ec2-instance/compare/v0.1.3...v0.1.4) (2026-03-03)
 
 
