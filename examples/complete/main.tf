@@ -52,7 +52,7 @@ module "wrapper_ec2_instance" {
       create_private_key          = true
       create_custom_policy        = true
       create_iam_instance_profile = true
-      custom_policy               = data.aws_iam_policy_document.example_policy
+      custom_policy               = data.aws_iam_policy_document.example_policy.json
       iam_role_description        = "IAM role for EC2 instance"
       iam_role_policies = {
         AdministratorAccess = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"

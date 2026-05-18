@@ -360,7 +360,7 @@ ec2_instance_parameters = {
   "ExComplete" = {
     create_custom_policy        = true
     create_iam_instance_profile = true
-    custom_policy               = data.aws_iam_policy_document.example_policy
+    custom_policy               = data.aws_iam_policy_document.example_policy.json
   }
 }
 ```

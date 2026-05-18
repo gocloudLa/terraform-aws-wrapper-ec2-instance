@@ -3,9 +3,13 @@ locals {
     for ec2_instance_key, ec2_instance_config in var.ec2_instance_parameters :
     {
       "${ec2_instance_key}" = {
-        create        = try(ec2_instance_config.create_custom_policy, false)
-        custom_policy = try(ec2_instance_config.custom_policy, "")
-        tags          = merge(lookup(ec2_instance_config, "tags", local.default_common_tags), { Name = "${local.common_name}-${ec2_instance_key}-policy" })
+        create = try(ec2_instance_config.create_custom_policy, false)
+        custom_policy = try(
+          ec2_instance_config.custom_policy.json,
+          ec2_instance_config.custom_policy,
+          ""
+        )
+        tags = merge(lookup(ec2_instance_config, "tags", local.default_common_tags), { Name = "${local.common_name}-${ec2_instance_key}-policy" })
       }
     } if try(ec2_instance_config.create_custom_policy, false)
   ]
@@ -16,7 +20,7 @@ resource "aws_iam_policy" "this" {
   for_each = local.custom_policy_parameters
 
   name   = "${local.common_name}-${each.key}"
-  policy = each.value.custom_policy.json
+  policy = each.value.custom_policy
   tags   = each.value.tags
 }
 
