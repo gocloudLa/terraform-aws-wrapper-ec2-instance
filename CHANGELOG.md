@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/gocloudLa/terraform-aws-wrapper-ec2-instance/compare/v0.2.0...v0.2.1) (2026-05-18)
+
+
+### Bug Fixes
+
+* update custom policy to avoid deprecated message ([#18](https://github.com/gocloudLa/terraform-aws-wrapper-ec2-instance/issues/18)) ([e7b1c57](https://github.com/gocloudLa/terraform-aws-wrapper-ec2-instance/commit/e7b1c570471ec080275684e64763a3561358e753))
+
 ## [0.2.0](https://github.com/gocloudLa/terraform-aws-wrapper-ec2-instance/compare/v0.1.4...v0.2.0) (2026-05-02)
 
 
