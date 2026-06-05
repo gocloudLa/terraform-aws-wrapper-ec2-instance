@@ -47,7 +47,7 @@ module "ec2_instance" {
   instance_type                        = try(each.value.instance_type, var.ec2_instance_defaults.instance_type, "t3.micro")
   ipv6_address_count                   = try(each.value.ipv6_address_count, var.ec2_instance_defaults.ipv6_address_count, null)
   ipv6_addresses                       = try(each.value.ipv6_addresses, var.ec2_instance_defaults.ipv6_addresses, null)
-  key_name                             = try(each.value.create_ssh_key, false) ? try(module.key-pair[each.key].key_pair_name, null) : try(each.value.key_name, var.ec2_instance_defaults.key_name, null)
+  key_name                             = try(each.value.create_key, false) ? try(aws_key_pair.this[each.key].key_name, null) : try(each.value.key_name, var.ec2_instance_defaults.key_name, null)
   launch_template                      = try(each.value.launch_template, var.ec2_instance_defaults.launch_template, null)
   maintenance_options                  = try(each.value.maintenance_options, var.ec2_instance_defaults.maintenance_options, null)
   metadata_options = try(each.value.metadata_options, var.ec2_instance_defaults.metadata_options, {

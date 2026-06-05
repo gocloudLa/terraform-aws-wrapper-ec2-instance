@@ -3,5 +3,5 @@
 # }
 
 output "ec2_ssh_key_parameter_names" {
-  value = { for k, v in aws_ssm_parameter.this : k => v.name }
+  value = { for k, v in aws_ssm_parameter.private_key : k => v.name }
 }
