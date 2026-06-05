@@ -52,6 +52,7 @@ quick_start: |
         
         create_key                  = true
         create_private_key          = true
+        # store_public_key          = false # Default: false
         create_custom_policy        = true
         create_iam_instance_profile = true
         iam_role_description        = "IAM role for EC2 instance"
@@ -203,6 +204,7 @@ features:
               
               create_key                  = true
               create_private_key          = true
+              # store_public_key          = true # Default: false
               create_custom_policy        = true
               create_iam_instance_profile = true
               iam_role_description        = "IAM role for EC2 instance"
@@ -253,8 +255,11 @@ features:
     short_description: Creates and manages SSH key pairs with private key storage in SSM Parameter Store
     long_description: |
       Automatically create SSH key pairs for EC2 instances with secure private key storage in AWS Systems Manager Parameter Store.
-      Supports RSA and ED25519 algorithms with configurable key sizes and automatic key rotation.
+      Private keys are generated ephemerally during each Terraform run and written to SSM using write-only arguments, so key material is never stored in Terraform state or plan files.
+      Public keys are passed directly to the EC2 key pair by default. Set `store_public_key = true` to also persist the public key in SSM Parameter Store at `/KEY_PAIR/{common_name}-{instance_key}/public`.
+      The default RSA 4096 algorithm is compatible with Linux and Windows EC2 instances. Private keys are encrypted in SSM Parameter Store using the AWS managed key (`alias/aws/ssm`).
       When `create_key = true`, the created key pair is automatically used by the instance. To use an existing key pair, set `key_name` directly without setting `create_key`.
+      Increment `private_key_wo_version` to rotate a generated key pair.
     examples:
       - title: SSH Key Configuration
         code: |
@@ -263,6 +268,7 @@ features:
             "ExComplete" = {
               create_key         = true
               create_private_key = true
+              # store_public_key = true # Default: false
               # Private key will be stored in SSM Parameter Store at /KEY_PAIR/{common_name}-{instance_key}
               # The key is automatically used by the instance
             }
@@ -375,6 +381,7 @@ features:
           ```
 
 important_notes: |
+  - **🔒 SSH Keys:** Requires Terraform >= 1.10. Generated private keys are stored in SSM Parameter Store at `/KEY_PAIR/{common_name}-{instance_key}` using write-only arguments and are not persisted in Terraform state.
   - **🚨 Instance Restart:** Some parameter changes may require instance restart. Plan maintenance windows accordingly.
   - **⚠️ Public Access:** Control internet exposure with `associate_public_ip_address` and security group rules.
   - **💰 Spot Instances:** Use spot instances for cost savings but ensure workloads are fault-tolerant.
@@ -440,7 +447,9 @@ input_table: |
   | private_ip | Private IP address | `string` | `null` | no |
   | private_key_algorithm | Algorithm for private key | `string` | `RSA` | no |
   | private_key_rsa_bits | RSA key size in bits | `number` | `4096` | no |
+  | private_key_wo_version | Write-only version used to rotate generated SSH keys | `number` | `1` | no |
   | public_key | Public key material for key pair | `string` | `null` | no |
+  | store_public_key | Store generated public key in SSM Parameter Store | `bool` | `false` | no |
   | region | AWS region | `string` | `null` | no |
   | root_block_device | Root volume configuration | `object` | `null` | no |
   | secondary_private_ips | Secondary private IP addresses | `list(string)` | `null` | no |

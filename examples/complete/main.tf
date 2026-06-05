@@ -50,6 +50,7 @@ module "wrapper_ec2_instance" {
 
       create_key                  = true
       create_private_key          = true
+      # store_public_key          = true # Default: false
       create_custom_policy        = true
       create_iam_instance_profile = true
       custom_policy               = data.aws_iam_policy_document.example_policy.json
