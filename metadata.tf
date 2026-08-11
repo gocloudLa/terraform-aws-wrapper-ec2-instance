@@ -27,7 +27,7 @@ locals {
   default_subnet_name         = "${local.common_name_prefix}-private*"
   default_subnet_private_name = "${local.common_name_prefix}-private*"
   default_subnet_public_name  = "${local.common_name_prefix}-public*"
-  default_security_group      = "${local.common_name_prefix}-default"
+  default_security_group_name = "${local.common_name_prefix}-default"
   default_sns_topic_name      = "${local.common_name_prefix}-alerts"
   default_event_bus_name      = "default"
 }
