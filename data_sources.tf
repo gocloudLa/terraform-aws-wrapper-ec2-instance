@@ -38,7 +38,6 @@ data "aws_security_group" "default" {
 
   tags = {
     Name = try(each.value.default_security_group_name, local.default_security_group_name)
-
   }
 }
 
