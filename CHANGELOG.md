@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/gocloudLa/terraform-aws-wrapper-ec2-instance/compare/v0.2.1...v0.3.0) (2026-08-14)
+
+
+### Features
+
+* **module:** add custom security group name ([#20](https://github.com/gocloudLa/terraform-aws-wrapper-ec2-instance/issues/20)) ([788cf45](https://github.com/gocloudLa/terraform-aws-wrapper-ec2-instance/commit/788cf4544bf51be270b2d5fcb54473cac6042af6))
+
 ## [0.2.1](https://github.com/gocloudLa/terraform-aws-wrapper-ec2-instance/compare/v0.2.0...v0.2.1) (2026-05-18)
 
 
